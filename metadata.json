@@ -1,0 +1,6 @@
+{
+  "name": "ConvoCraft AI",
+  "description": "An intelligent web app to transcribe, merge, and analyze your conversations. Transcribe audio/video files, merge WhatsApp chat exports with their audio, and use Gemini AI to summarize, extract notes, or run custom analysis on your chats.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
