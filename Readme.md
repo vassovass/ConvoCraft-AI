@@ -91,3 +91,29 @@ This application is a tool that helps you use various AI APIs. Every time a file
 ## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+## Quick Start
+
+```bash
+# 1. Install dependencies (first time only)
+npm install
+
+# 2. Start the development server (hot-reload via Vite)
+npm run dev
+# → open the printed URL, usually http://localhost:5173/
+```
+
+For a production build:
+```bash
+npm run build   # generates static files in dist/
+npm run preview # serves the built site
+```
+
+### Linting & Tests
+```bash
+npm run lint       # ESLint over the codebase
+npm run docs:lint  # Markdown lint for docs
+npm run test       # Placeholder until real tests are added
+```
+
+---

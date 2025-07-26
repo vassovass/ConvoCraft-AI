@@ -69,9 +69,9 @@ function updateChangelog(sections) {
     items.forEach(i => (entry += `- ${i}\n`));
   }
 
-  // Insert after header (first blank line) so header stays top
-  const headerEnd = changelog.indexOf('\n\n');
-  const insertionPoint = headerEnd === -1 ? 0 : headerEnd + 2;
+  // Find the end of the first line (title) to keep header intact
+  const firstBreak = changelog.indexOf('\n');
+  const insertionPoint = firstBreak === -1 ? changelog.length : firstBreak + 1;
   const newContent = changelog.slice(0, insertionPoint) + entry + changelog.slice(insertionPoint);
   writeFileSafe(changelogPath, newContent);
 }

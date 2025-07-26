@@ -9,7 +9,7 @@
     "docs:lint": "markdownlint '**/*.md'",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "echo \"(placeholder) run tests\" && exit 0"
+    "test": "echo \"No tests defined. Failing build.\" && exit 1"
   },
   "dependencies": {
     "react": "^19.1.0",

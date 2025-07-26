@@ -1,5 +1,5 @@
 // scripts/dependencyInsight.js
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 try {
   const output = execSync('npm audit --json', {
