@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { type AppSettings, type ProviderName, type ApiProviderConfig } from '../types';
 import { getDefaultSettings } from '../utils';
+import { generateSilentAudioFile } from '../utils';
 
 const handleApiError = (error: unknown, providerName?: ProviderName): Error => {
     console.error(`Error calling ${providerName || 'AI'} API:`, error);
@@ -14,18 +15,6 @@ const handleApiError = (error: unknown, providerName?: ProviderName): Error => {
         return new Error(`API Error (${providerName}): ${error.message}`);
     }
     return new Error("An unknown error occurred during AI processing.");
-};
-
-const getSettings = (): AppSettings => {
-    try {
-        const settingsStr = localStorage.getItem('appSettings');
-        if (settingsStr) {
-            return JSON.parse(settingsStr);
-        }
-    } catch (e) {
-        console.error("Failed to parse settings from localStorage", e);
-    }
-    return getDefaultSettings();
 };
 
 const fileToGenerativePart = async (file: File) => {
@@ -66,9 +55,21 @@ export const verifyApiKey = async (provider: ApiProviderConfig): Promise<{ succe
                 // We'll assume it's correct if present and let the server handle errors.
                 return { success: true };
             case 'openai':
-                const openaiUrl = baseUrl || 'https://api.openai.com/v1/models';
-                const openAiRes = await fetch(openaiUrl, { headers: { 'Authorization': `Bearer ${apiKey}` } });
-                if (!openAiRes.ok) throw new Error(`Server responded with ${openAiRes.status}`);
+                const whisperTest = async () => {
+                    const silentAudio = await generateSilentAudioFile();
+                    const formData = new FormData();
+                    formData.append('file', silentAudio);
+                    formData.append('model', 'whisper-1');
+                    
+                    const whisperUrl = baseUrl || 'https://api.openai.com/v1/audio/transcriptions';
+                    const res = await fetch(whisperUrl, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${apiKey}` },
+                        body: formData,
+                    });
+                    if (!res.ok) throw new Error(`Whisper transcription test failed with status ${res.status}`);
+                };
+                await whisperTest();
                 return { success: true };
             case 'claude':
                 const claudeUrl = baseUrl || 'https://api.anthropic.com/v1/messages';
@@ -103,7 +104,7 @@ export const verifyApiKey = async (provider: ApiProviderConfig): Promise<{ succe
 
 
 export const transcribeFile = async (file: File): Promise<string> => {
-    const settings = getSettings();
+    const settings = getDefaultSettings(); // Use getDefaultSettings directly
     const { activeProvider, providers, customTranscriptionPrompt } = settings;
     const providerConfig = providers[activeProvider];
 

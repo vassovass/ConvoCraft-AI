@@ -1,10 +1,14 @@
 import { type AppSettings } from './types';
 
 export const getBaseName = (fileName: string): string => {
-  return fileName.split('.').slice(0, -1).join('.');
+  const parts = fileName.split('.');
+  if (parts.length === 1) {
+    return fileName;
+  }
+  return parts.slice(0, -1).join('.');
 };
 
-const downloadFile = (blob: Blob, filename: string) => {
+export const downloadFile = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -186,3 +190,10 @@ function loadSettings(): AppSettings {
     }
     return getDefaultSettings();
 }
+
+export const generateSilentAudioFile = async (): Promise<File> => {
+    // A tiny, silent WAV file encoded in base64
+    const base64SilentWav = 'UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+    const blob = await (await fetch(`data:audio/wav;base64,${base64SilentWav}`)).blob();
+    return new File([blob], 'silent.wav', { type: 'audio/wav' });
+};
