@@ -13,6 +13,14 @@ interface ProviderConfigSectionProps {
     onVerify: (name: ProviderName) => void;
 }
 
+const providerNotes: Record<ProviderName, string> = {
+    gemini: 'Great all-around model for text and multimodal tasks.',
+    openai: 'Recommended for high-accuracy audio transcription with Whisper.',
+    claude: 'Strong model for nuanced text generation and analysis.',
+    groq: 'High-speed inference for real-time applications.',
+    custom: 'For use with any OpenAI-compatible API endpoint.'
+};
+
 const ProviderConfigSection: React.FC<ProviderConfigSectionProps> = ({ providerName, config, isCustom, onUpdate, onVerify }) => {
     const [showApiKey, setShowApiKey] = useState(false);
     const providerDisplayName = providerName.charAt(0).toUpperCase() + providerName.slice(1);
@@ -34,6 +42,7 @@ const ProviderConfigSection: React.FC<ProviderConfigSectionProps> = ({ providerN
     return (
         <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600 space-y-3">
             <h4 className="font-semibold text-lg text-gray-200">{providerDisplayName}</h4>
+            <p className="text-xs text-gray-400 -mt-2">{providerNotes[providerName]}</p>
             
             {isCustom && (
                 <div>
@@ -182,16 +191,27 @@ export const Settings: React.FC = () => {
                 
                 <div>
                     <label htmlFor="active-provider" className="block text-sm font-medium text-gray-300 mb-2">Active AI Provider</label>
-                    <select
-                        id="active-provider"
-                        value={settings.activeProvider}
-                        onChange={handleActiveProviderChange}
-                        className="w-full p-2 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-2 focus:ring-cyan-500"
-                    >
-                        {providerOrder.map(name => (
-                           <option key={name} value={name}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
-                        ))}
-                    </select>
+                    <div className="flex items-center gap-2">
+                        <select
+                            id="active-provider"
+                            value={settings.activeProvider}
+                            onChange={handleActiveProviderChange}
+                            className="w-full p-2 bg-gray-700 border border-gray-600 text-white rounded-md focus:ring-2 focus:ring-cyan-500"
+                        >
+                            {providerOrder.map(name => (
+                               <option key={name} value={name}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
+                            ))}
+                        </select>
+                        <button 
+                            onClick={() => alert('For best results, use a model specialized for transcription, like OpenAI\'s Whisper. Gemini is a great general-purpose choice. Refer to the README for more details.')} 
+                            className="text-gray-400 hover:text-white"
+                            title="Learn more about choosing an AI provider"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
                     <p className="text-xs text-gray-400 mt-1">Select which provider to use for transcription and analysis.</p>
                 </div>
 
