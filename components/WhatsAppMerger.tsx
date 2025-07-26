@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UploadIcon, SparklesIcon } from './Icons';
 import { exportAsTxt, exportAsHtml, exportAsJson, exportAsCsv } from '../utils';
 import { processChatWithAI } from '../services/aiService';
@@ -31,9 +31,28 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for AI processing
+  const STORAGE_KEY = 'convocraft-ai-analysis';
   const [aiEnabled, setAiEnabled] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [aiResult, setAiResult] = useState('');
+
+  // load persisted state
+  useEffect(() => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const { enabled, prompt, result } = JSON.parse(raw);
+      setAiEnabled(enabled ?? false);
+      setCustomPrompt(prompt ?? '');
+      setAiResult(result ?? '');
+    } catch {}
+  }, []);
+
+  // persist on change
+  useEffect(() => {
+    const data = JSON.stringify({ enabled: aiEnabled, prompt: customPrompt, result: aiResult });
+    localStorage.setItem(STORAGE_KEY, data);
+  }, [aiEnabled, customPrompt, aiResult]);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [aiError, setAiError] = useState('');
 
@@ -120,14 +139,24 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
     setIsAiProcessing(true);
     setAiError('');
     setAiResult('');
-    try {
+
+    const attempts = 2;
+    for (let i = 0; i < attempts; i++) {
+      try {
         const result = await processChatWithAI(mergedChat, prompt);
         setAiResult(result);
-    } catch(err) {
-        setAiError(err instanceof Error ? err.message : 'An unknown error occurred.');
-    } finally {
-        setIsAiProcessing(false);
+        break; // success
+      } catch (err) {
+        if (i === attempts - 1) {
+          console.error('AI processing failed:', err);
+          setAiError(err instanceof Error ? err.message : 'An unknown error occurred. See console for details.');
+        } else {
+          // small back-off before retry
+          await new Promise(r => setTimeout(r, 1000));
+        }
+      }
     }
+    setIsAiProcessing(false);
   };
 
   return (
@@ -205,10 +234,13 @@ PTT-20240101-WA0002: This is another test..."
                     <pre className="text-gray-300 whitespace-pre-wrap text-sm font-sans">{mergedChat}</pre>
                 </div>
                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button onClick={() => exportAsTxt(mergedChat, 'whatsapp-chat')} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as TXT</button>
-                    <button onClick={() => exportAsHtml(mergedChat, 'whatsapp-chat')} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as HTML</button>
-                    <button onClick={() => exportAsJson(mergedChat, 'whatsapp-chat')} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as JSON</button>
-                    <button onClick={() => exportAsCsv(mergedChat, 'whatsapp-chat')} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as CSV</button>
+                    {(() => {const ts = new Date().toISOString().replace(/[:.]/g,'-'); const base=`whatsapp-chat-${ts}`; return (
+                    <>
+                      <button onClick={() => exportAsTxt(mergedChat, base)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as TXT</button>
+                      <button onClick={() => exportAsHtml(mergedChat, base)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as HTML</button>
+                      <button onClick={() => exportAsJson(mergedChat, base)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as JSON</button>
+                      <button onClick={() => exportAsCsv(mergedChat, base)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as CSV</button>
+                    </>)})()}
                 </div>
             </Section>
 
@@ -272,6 +304,10 @@ PTT-20240101-WA0002: This is another test..."
                                ) : (
                                  <p className="text-gray-500">The AI-generated result will appear here.</p>
                                )}
+                            </div>
+                            <div className="flex gap-3 mt-2">
+                              <button onClick={() => {setAiEnabled(false); setCustomPrompt(''); setAiResult(''); setAiError(''); localStorage.removeItem(STORAGE_KEY);}} className="px-3 py-1 text-xs font-semibold bg-red-600 text-white rounded-md hover:bg-red-500">Clear All</button>
+                              <button onClick={() => {const combined = `${mergedChat}\n\n--- AI Result ---\n${aiResult}`; const name=`chat-with-ai-${new Date().toISOString().replace(/[:.]/g,'-')}`; exportAsTxt(combined,name);}} disabled={!aiResult} className="px-3 py-1 text-xs font-semibold bg-cyan-600 text-white rounded-md hover:bg-cyan-500 disabled:opacity-50">Save All</button>
                             </div>
                         </div>
                     </div>
