@@ -9,6 +9,11 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
+/**
+ * Prompt the user for input via stdin.
+ * @param {string} question - The message to display to the user.
+ * @returns {Promise<string>} Resolves with the user's input.
+ */
 const promptUser = (question) =>
   new Promise((resolve) => rl.question(question, resolve));
 
