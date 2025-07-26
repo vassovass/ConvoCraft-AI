@@ -22,10 +22,16 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // CORS configuration
-const allowedOrigins = ['http://localhost:5173']; // Add your production frontend URL here
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174', 
+    'http://localhost:5175',
+    /^http:\/\/localhost:\d{4}$/ // Regex for any localhost port
+]; 
+
 const corsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+    if (!origin || allowedOrigins.some(pattern => typeof pattern === 'string' ? pattern === origin : pattern.test(origin))) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

@@ -34,36 +34,58 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for AI processing
-  const STORAGE_KEY = 'convocraft-ai-analysis';
+  const AI_STORAGE_KEY = 'convocraft-ai-analysis';
+  const CHAT_STORAGE_KEY = 'convocraft-chat-data';
   const [aiEnabled, setAiEnabled] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [aiResult, setAiResult] = useState('');
 
   // load persisted state
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const { enabled, prompt, result } = JSON.parse(raw);
-      setAiEnabled(enabled ?? false);
-      setCustomPrompt(prompt ?? '');
-      setAiResult(result ?? '');
-    } catch (e) {
-      console.error(e)
+    // Load AI analysis state
+    const aiRaw = localStorage.getItem(AI_STORAGE_KEY);
+    if (aiRaw) {
+        try {
+            const { enabled, prompt, result } = JSON.parse(aiRaw);
+            setAiEnabled(enabled ?? false);
+            setCustomPrompt(prompt ?? '');
+            setAiResult(result ?? '');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
+    // Load chat data state
+    const chatRaw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (chatRaw) {
+        try {
+            const { chat, transcriptions, merged } = JSON.parse(chatRaw);
+            setChatLog(chat ?? '');
+            setTranscriptionsText(transcriptions ?? '');
+            setMergedChat(merged ?? '');
+        } catch (e) {
+            console.error(e);
+        }
     }
   }, []);
 
   // persist on change
   useEffect(() => {
-    const handler = setTimeout(() => {
+    const aiHandler = setTimeout(() => {
         const data = JSON.stringify({ enabled: aiEnabled, prompt: customPrompt, result: aiResult });
-        localStorage.setItem(STORAGE_KEY, data);
+        localStorage.setItem(AI_STORAGE_KEY, data);
     }, 500); // 500ms debounce delay
+    
+    const chatHandler = setTimeout(() => {
+        const data = JSON.stringify({ chat: chatLog, transcriptions: transcriptionsText, merged: mergedChat });
+        localStorage.setItem(CHAT_STORAGE_KEY, data);
+    }, 500);
 
     return () => {
-        clearTimeout(handler);
+        clearTimeout(aiHandler);
+        clearTimeout(chatHandler);
     };
-}, [aiEnabled, customPrompt, aiResult]);
+}, [aiEnabled, customPrompt, aiResult, chatLog, transcriptionsText, mergedChat]);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [aiError, setAiError] = useState('');
 
@@ -317,7 +339,7 @@ PTT-20240101-WA0002: This is another test..."
                                )}
                             </div>
                             <div className="flex gap-3 mt-2">
-                              <button onClick={() => {setAiEnabled(false); setCustomPrompt(''); setAiResult(''); setAiError(''); localStorage.removeItem(STORAGE_KEY);}} className="px-3 py-1 text-xs font-semibold bg-red-600 text-white rounded-md hover:bg-red-500">Clear All</button>
+                              <button onClick={() => {setAiEnabled(false); setCustomPrompt(''); setAiResult(''); setAiError(''); localStorage.removeItem(AI_STORAGE_KEY);}} className="px-3 py-1 text-xs font-semibold bg-red-600 text-white rounded-md hover:bg-red-500">Clear All</button>
                               <button onClick={() => {const combined = `${mergedChat}\n\n--- AI Result ---\n${aiResult}`; const name=`chat-with-ai-${new Date().toISOString().replace(/[:.]/g,'-')}`; exportAsTxt(combined,name);}} disabled={!aiResult} className="px-3 py-1 text-xs font-semibold bg-cyan-600 text-white rounded-md hover:bg-cyan-500 disabled:opacity-50">Save All</button>
                             </div>
                         </div>

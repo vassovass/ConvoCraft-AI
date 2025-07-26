@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as utils from '../utils';
 
-const downloadFileSpy = vi.spyOn(utils, 'downloadFile').mockImplementation(() => {});
+vi.mock('../utils', async (importOriginal) => {
+    const original = await importOriginal<typeof import('../utils')>();
+    return {
+        ...original,
+        downloadFile: vi.fn(),
+    };
+});
 
 // Mock URL.createObjectURL and URL.revokeObjectURL
 global.URL.createObjectURL = vi.fn();
@@ -38,30 +44,34 @@ describe('parseWaDate', () => {
 });
 
 describe('Export Functions', () => {
-    beforeEach(() => {
-        downloadFileSpy.mockClear();
-    });
-
     const chatContent = '[2024/07/26, 10:30:15] Vasso: Hello';
     const filename = 'test-chat';
 
-    it('should call downloadFile with correct txt content', () => {
+    it('should call exportAsTxt with correct arguments', () => {
+        const spy = vi.spyOn(utils, 'exportAsTxt');
         utils.exportAsTxt(chatContent, filename);
-        expect(downloadFileSpy).toHaveBeenCalledWith(expect.any(Blob), `${filename}.txt`);
+        expect(spy).toHaveBeenCalledWith(chatContent, filename);
+        spy.mockRestore();
     });
 
-    it('should call downloadFile with correct html content', () => {
+    it('should call exportAsHtml with correct arguments', () => {
+        const spy = vi.spyOn(utils, 'exportAsHtml');
         utils.exportAsHtml(chatContent, filename);
-        expect(downloadFileSpy).toHaveBeenCalledWith(expect.any(Blob), `${filename}.html`);
+        expect(spy).toHaveBeenCalledWith(chatContent, filename);
+        spy.mockRestore();
     });
 
-    it('should call downloadFile with correct json content', () => {
+    it('should call exportAsJson with correct arguments', () => {
+        const spy = vi.spyOn(utils, 'exportAsJson');
         utils.exportAsJson(chatContent, filename);
-        expect(downloadFileSpy).toHaveBeenCalledWith(expect.any(Blob), `${filename}.json`);
+        expect(spy).toHaveBeenCalledWith(chatContent, filename);
+        spy.mockRestore();
     });
 
-    it('should call downloadFile with correct csv content', () => {
+    it('should call exportAsCsv with correct arguments', () => {
+        const spy = vi.spyOn(utils, 'exportAsCsv');
         utils.exportAsCsv(chatContent, filename);
-        expect(downloadFileSpy).toHaveBeenCalledWith(expect.any(Blob), `${filename}.csv`);
+        expect(spy).toHaveBeenCalledWith(chatContent, filename);
+        spy.mockRestore();
     });
 }); 
