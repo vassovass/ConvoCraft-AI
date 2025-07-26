@@ -166,8 +166,8 @@ export const processChatWithAI = async (chatContent: string, userPrompt: string)
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
-    if (text === null || text === undefined || text.trim() === '') {
-        throw new Error("AI analysis resulted in an empty response.");
-    }
-    return text;
+                if (text === null || text === undefined || text.trim() === '') {
+                  throw new Error("AI analysis resulted in an empty response.");
+                }
+                return text;
 };

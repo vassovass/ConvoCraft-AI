@@ -185,8 +185,7 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
                   value={chatLog}
                   onChange={(e) => setChatLog(e.target.value)}
                   placeholder="Paste your exported WhatsApp chat text here..."
-                  className="w-full flex-grow p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
-                  style={{ minHeight: '200px' }}
+                  className="w-full flex-grow p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition min-h-[200px]"
                 />
                 <button
                     onClick={() => fileInputRef.current?.click()}
@@ -218,8 +217,7 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
                   onChange={(e) => setTranscriptionsText(e.target.value)}
                   placeholder="PTT-20240101-WA0001: Hello this is a test.
 PTT-20240101-WA0002: This is another test..."
-                  className="w-full flex-grow p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
-                  style={{ minHeight: '200px' }}
+                  className="w-full flex-grow p-3 bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition min-h-[200px]"
                 />
             </Section>
         </div>
