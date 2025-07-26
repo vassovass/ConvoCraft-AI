@@ -173,7 +173,7 @@ export const getDefaultSettings = (): AppSettings => ({
   },
 });
 
-function getSettings(): AppSettings {
+function loadSettings(): AppSettings {
     const saved = localStorage.getItem('convocraft-settings');
     if (saved) {
         try {

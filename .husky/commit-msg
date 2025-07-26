@@ -4,6 +4,4 @@
 if ! node scripts/commitMessageEnforcer.js "$1"; then
   echo "commit message validation failed"
   exit 1
-fi
-
-exit 0 
+fi 

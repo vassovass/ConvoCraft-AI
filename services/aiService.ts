@@ -59,8 +59,11 @@ export const verifyApiKey = async (provider: ApiProviderConfig): Promise<{ succe
     try {
         switch (name) {
             case 'gemini':
-                // With the proxy, we can't verify the key on the client.
-                // We'll assume it's correct and let the server handle errors.
+                if (!apiKey) {
+                    return { success: false, error: 'API key cannot be empty.' };
+                }
+                // With the proxy, we can't fully verify the key on the client.
+                // We'll assume it's correct if present and let the server handle errors.
                 return { success: true };
             case 'openai':
                 const openaiUrl = baseUrl || 'https://api.openai.com/v1/models';
@@ -115,7 +118,7 @@ export const transcribeFile = async (file: File): Promise<string> => {
                 formData.append('file', file);
                 formData.append('prompt', customTranscriptionPrompt);
 
-                const response = await fetch('http://localhost:3001/api/gemini/transcribe', {
+                const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/gemini/transcribe`, {
                     method: 'POST',
                     body: formData,
                 });
@@ -139,9 +142,6 @@ export const transcribeFile = async (file: File): Promise<string> => {
             case 'groq':
             case 'custom':
                 throw new Error(`Transcription using ${activeProvider} is not yet implemented in this version.`);
-
-            default:
-                 throw new Error(`Unsupported provider: ${activeProvider}`);
         }
     } catch (error) {
         throw handleApiError(error, activeProvider);
@@ -149,50 +149,25 @@ export const transcribeFile = async (file: File): Promise<string> => {
 };
 
 export const processChatWithAI = async (chatContent: string, userPrompt: string): Promise<string> => {
-    const settings = getSettings();
-    const { activeProvider, providers } = settings;
-    const providerConfig = providers[activeProvider];
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/gemini`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: `${userPrompt}\n\nHere is the chat log:\n\n${chatContent}` }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Proxy server returned status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
-    if (!providerConfig || !providerConfig.apiKey) {
-        throw new Error(`API key for active provider (${activeProvider}) is not configured. Please go to Settings.`);
+    if (text === null || text === undefined || text.trim() === '') {
+        throw new Error("AI analysis resulted in an empty response.");
     }
-
-    try {
-        switch (activeProvider) {
-            case 'gemini':
-                const response = await fetch('http://localhost:3001/api/gemini', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ prompt: `${userPrompt}\n\nHere is the chat log:\n\n${chatContent}` }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Proxy server returned status ${response.status}`);
-                }
-
-                const data = await response.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                if (text === null || text === undefined || text.trim() === '') {
-                  throw new Error("AI analysis resulted in an empty response.");
-                }
-                return text;
-
-            // Placeholder for other providers
-            case 'openai':
-            case 'claude':
-            case 'groq':
-            case 'custom':
-                throw new Error(`Chat analysis using ${activeProvider} is not yet implemented in this version.`);
-            
-            default:
-                throw new Error(`Unsupported provider: ${activeProvider}`);
-        }
-
-    } catch (error) {
-        throw handleApiError(error, activeProvider);
-    }
+    return text;
 };

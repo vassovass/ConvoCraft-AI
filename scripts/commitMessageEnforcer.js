@@ -15,7 +15,7 @@ try {
   process.exit(1);
 }
 
-const re = /^(feat|fix|docs|style|refactor|perf|test|chore)(\([a-z0-9_\/-]+\))?: .{1,100}$/;
+const re = /^\b(feat|fix|docs|style|refactor|perf|test|chore)\b(\([a-z0-9_\/-]+\))?:\s[^\r\n]{5,100}$/;
 
 if (re.test(msg)) {
   console.log('CommitMessageEnforcer: message valid');

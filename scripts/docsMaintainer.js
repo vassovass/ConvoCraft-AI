@@ -20,10 +20,11 @@ function writeFileSafe(filePath, content) {
 /** Get commits since last tag or initial commit */
 function getRecentCommits() {
   try {
+    execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
     const log = execSync('git log --pretty=format:%s --max-count=50 HEAD', { encoding: 'utf8' });
     return log.split(/\r?\n/).filter(Boolean);
   } catch (err) {
-    console.error('Failed to read git log', err);
+    console.error('Failed to read git log. Are you in a git repository?', err);
     return [];
   }
 }
