@@ -1,121 +1,113 @@
 
-# ConvoCraft AI: Transcribe & Analyze
+# ConvoCraft AI 🚀
 
-An intelligent, browser-based application to transcribe files, merge WhatsApp chat exports, and perform powerful AI analysis on your conversations using your favorite AI providers.
+**An intelligent, browser-based application to transcribe files, merge WhatsApp chat exports to include the transcripted audio in the correct timeline of the exported chat, and perform powerful AI analysis on your conversations using your favorite AI providers.**
 
-## The Story Behind ConvoCraft
+## 📖 Project Genesis: From a Personal Problem to a Portfolio Piece
 
-This project started as a personal experiment with the Google AI Studio code assistant. The initial goal was simple: create a tool to get quick summaries of personal notes and ideas captured in WhatsApp chats. Instead of scattered thoughts, I wanted structured summaries and key points. This tool was born from that need—transforming messy chat logs into organized, actionable information.
+This project was born out of a real-world frustration. I was using Perplexity on WhatsApp to capture notes and ideas, but it often failed to provide a text transcript of our conversations. I needed a reliable way to turn those voice notes into text, so I decided to build a solution myself.
 
-As it evolved, it became a flexible, multi-provider tool that could serve a wider purpose, leading to the feature-rich application it is today. It is now shared as an open-source project for others to use, learn from, and build upon.
+My journey began with the coding agent in Google AI Studio. I was pleasantly surprised by how quickly and accurately it scaffolded the initial application, creating a functional UI and the core transcription logic in a single shot. It effortlessly handled batch transcriptions of multiple files, even when the total size was well over 25MB. This experience challenged my previous assumption that older OpenAI models were superior for coding; Gemini proved to be incredibly fast and effective.
 
-## Features
+As the tool evolved, I moved the project to Cursor and hosted it on GitHub. My focus shifted to making the application more robust, secure, and feature-rich. I integrated CodeRabbit to perform automated code reviews, ensuring a high standard of quality. This project is not just a utility; it's a testament to the power of modern AI development tools and a showcase of my journey in building a secure, user-friendly application from the ground up.
 
-- **Multi-Provider AI**: Configure and switch between different AI providers (Google Gemini, OpenAI, Anthropic Claude, Groq) and even a custom endpoint.
-- **API Key Verification**: Securely enter your API keys and verify them with a single click to ensure they are working correctly.
-- **Secure Local Storage**: Your API keys and settings are saved in your browser's local storage, not in code files, for improved security and convenience.
-- **Multi-Format Transcription**: Transcribe audio (e.g., `.opus`, `.mp3`), video (e.g., `.mp4`), images, and documents.
-- **Customizable Prompts**: Use the "Settings" tab to define your own default prompt for transcriptions, giving you full control over the AI's output.
-- **Batch Processing**: Upload and transcribe multiple files at once with a managed queue.
-- **WhatsApp Chat Integration**:
-    - Upload or paste a WhatsApp `.txt` chat export.
-    - **Date Filtering**: Filter chats by a specific time range (e.g., Last 7 Days) before processing.
-    - Automatically merges transcribed audio back into the chat timeline.
-- **Advanced AI Analysis**:
-    - After merging a chat, use your active AI provider to perform advanced analysis.
-    - **One-Click Prompts**: Summarize, extract key points, or analyze sentiment with a single click.
-    - **Custom Prompts**: Write your own prompts to transform the chat data.
-- **Multi-Format Export**: Export the merged WhatsApp chat as `.txt`, `.html`, `.json`, or `.csv`.
-- **Cost Management**: Includes a safety-check warning before processing large batches of files to help you manage API costs.
-- **Private & Secure**: Everything runs in your browser. Your files and API keys are not sent to any third-party server besides the AI provider you configure.
-- **Open Source**: Licensed under the MIT license.
+## ✨ Key Features
 
-## Installation
+-   **Multi-Provider AI**: Seamlessly switch between Google Gemini, OpenAI, Anthropic Claude, Groq, or even your own custom endpoint.
+-   **Secure, Client-Side Storage**: Your API keys and settings are stored securely in your browser's local storage, never in code or on a server.
+-   **Versatile Transcription**: Transcribe a wide range of formats, including audio (`.opus`, `.mp3`), video (`.mp4`), images, and documents.
+-   **WhatsApp Chat Integration**:
+    -   Upload or paste WhatsApp chat exports (`.txt`).
+    -   Filter chats by date range.
+    -   Automatically merge transcribed audio back into the chat timeline.
+-   **Advanced AI Analysis**:
+    -   Leverage one-click prompts for summaries, key points, and sentiment analysis.
+    -   Write your own custom prompts to tailor the AI's analysis to your needs.
+-   **Multi-Format Export**: Export your merged chats and AI analysis as `.txt`, `.html`, `.json`, or `.csv`.
+-   **Private and Secure**: All processing happens in your browser. Your data is never sent to a third-party server, except for the AI provider you configure.
+-   **Open Source**: Licensed under the MIT license, so you can use, modify, and share it freely.
 
-This is a client-side web application and does not require a complex build process.
+## 🔒 Security Features
 
-1.  **Get the Code**: Download or clone the project files to your local machine.
-2.  **Run the App**: You can run this application in two simple ways:
-    *   **Option A (Easiest)**: Simply open the `index.html` file directly in your web browser.
-    *   **Option B (Recommended)**: For the best experience, serve the files using a simple local web server.
-        *   If you have **Node.js**: `npm install -g serve && serve .`
-        *   If you have **Python**: `python -m http.server`
-        *   Then, open the local address provided (e.g., `http://localhost:3000` or `http://localhost:8000`) in your browser.
-3.  **Configure API Keys**: Once the app is running, go to the **"Settings"** tab to configure your API keys.
+Security is a top priority for ConvoCraft AI. Here's how we protect your data:
 
-## API Key Setup (Important!)
+-   **API Key Proxy**: To protect your Gemini API key, all requests are routed through a lightweight server-side proxy. This means your API key is never exposed to the browser, significantly reducing the risk of it being compromised.
+-   **Content Sanitization**: All AI-generated content is sanitized using DOMPurify before being rendered in the browser. This prevents Cross-Site Scripting (XSS) attacks and ensures that any potentially malicious content is neutralized.
+-   **Dependency Scanning**: We use automated tools to scan for vulnerabilities in our dependencies, ensuring the project stays secure.
 
-All API configuration is done inside the app in the **"Settings"** tab.
+## 💻 Technology Stack
 
-1.  Navigate to the "Settings" tab.
-2.  Choose the AI Provider you want to use (e.g., Gemini).
-3.  Enter your API key into the corresponding input field. The key will be masked for security.
-4.  Click **"Verify Key"** to ensure the key is correct and working. You should see a "Verified" status.
-5.  Select your desired "Active AI Provider" from the dropdown. This is the provider the app will use for all tasks.
-6.  Click **"Save All Settings"**. Your keys are stored securely in your browser's local storage and will be available the next time you open the app.
+-   **Frontend**: React, TypeScript, Vite
+-   **Styling**: Tailwind CSS
+-   **Testing**: Vitest, React Testing Library
+-   **Backend (Proxy)**: Node.js, Express
+-   **Development Tools**:
+    -   **Initial Scaffolding**: Google AI Studio's Coding Agent
+    -   **Refinement & Security**: Cursor
+    -   **Code Review**: CodeRabbit
 
-Get your API keys from their respective platforms:
-- **Google Gemini**: [Google AI Studio](https://aistudio.google.com/app/apikey)
-- **OpenAI**: [OpenAI Platform](https://platform.openai.com/api-keys)
-- **Anthropic (Claude)**: [Anthropic Console](https://console.anthropic.com/settings/keys)
-- **Groq**: [GroqCloud Console](https://console.groq.com/keys)
+## ⚙️ How the WhatsApp Merger Works: A Closer Look
 
-## How to Use
+The real magic of ConvoCraft AI is in its ability to seamlessly weave your transcribed audio back into the context of your WhatsApp conversations. This process is highly tailored to the specific format of WhatsApp's `.txt` chat exports.
 
-### Individual File Transcription
-1. Go to the "Settings" tab to configure and select your active AI provider.
-2. (Optional) In "Settings", customize the default transcription prompt to fit your needs.
-3. Go to the "Transcribe Files" tab.
-4. Drag and drop your files into the upload area, or click to browse.
-5. The application will automatically process the files. View transcriptions as they complete.
-6. Select completed items and use "Copy Selected" to copy them to your clipboard.
+**The Logic:**
 
-### WhatsApp Chat Analysis
-1. Navigate to the **"WhatsApp Chat Merger"** tab.
-2. **Add Chat Log**: Paste your chat content or upload the `_chat.txt` file. For help, see WhatsApp's official guide on [how to export your chat history](https://faq.whatsapp.com/1180414079177245).
-3. **Filter (Optional)**: Choose a date range to focus on a specific period.
-4. **Upload Audio**: Go to the "Transcribe Files" tab and upload all corresponding `.opus` audio files.
-5. **Review Merged Chat**: Return to the "WhatsApp Chat Merger" tab. The app will automatically merge the transcriptions into the chat log.
-6. **Enable AI Analysis**: Check the "Enable AI Chat Analysis" box.
-7. **Run AI Prompts**: Click a preset button (e.g., "Summarize") or write a custom prompt and click "Generate". The currently active AI provider will be used.
-8. **Review & Export**: View the AI-generated results. Use the export buttons to save your merged chat.
+1.  **Identifying Audio Placeholders**: When you export a WhatsApp chat, audio messages are represented by a placeholder line that looks something like this:
+    ```
+    [2024/07/26, 10:30:15] Vasso: PTT-20240726-WA0001.opus (file attached)
+    ```
+    Our parser specifically looks for this pattern: a timestamp, a sender, a filename (like `PTT-20240726-WA0001.opus` or `AUD-20240726-WA0001.opus`), and the text `(file attached)`.
 
-## API Cost and Responsibility
+2.  **Matching Transcriptions**: When you upload your `.opus` audio files for transcription, the app stores the transcribed text mapped to its original filename (e.g., `PTT-20240726-WA0001`).
 
-**You are responsible for all costs associated with your own API keys.**
+3.  **Replacing the Placeholder**: The merger then reads through your chat log line by line. When it finds an audio placeholder, it looks up the corresponding filename in its map of transcriptions. If a match is found, it replaces the entire placeholder line with the actual transcribed text, while keeping the original timestamp and sender:
+    *   **Before**: `[2024/07/26, 10:30:15] Vasso: PTT-20240726-WA0001.opus (file attached)`
+    *   **After**: `[2024/07/26, 10:30:15] Vasso: PTT-20240726-WA0001: Hello, this is the transcribed audio message. (file transcribed)`
 
-This application is a tool that helps you use various AI APIs. Every time a file is transcribed or a chat is analyzed, it makes a call to the API you have configured, which may consume your quota or incur costs depending on your account setup.
+**Important Note**: This feature is highly optimized for the official WhatsApp `.txt` export format. While it may work with other chat exports that follow a similar pattern, it is not guaranteed.
 
-- **Monitor Your Usage**: Always monitor your API usage and billing in your provider's dashboard. Set up budget alerts to avoid unexpected charges.
+## 🚀 Getting Started
 
-## License
+### Prerequisites
+
+-   Node.js (v18 or higher)
+-   npm
+
+### Installation & Running the App
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-username/convocraft-ai.git
+    cd convocraft-ai
+    ```
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+3.  **Set up your API key**:
+    -   Create a `.env` file in the root of the project.
+    -   Add your Gemini API key: `GEMINI_API_KEY=your_gemini_api_key_here`
+4.  **Run the server and client**:
+    -   In one terminal, start the server: `node server.js`
+    -   In another terminal, start the client: `npm run dev`
+5.  **Open the app** in your browser at `http://localhost:5173`.
+
+### Configuration
+
+All other API keys and settings can be configured directly in the app's "Settings" tab. They will be saved to your browser's local storage.
+
+## ✅ Running Tests
+
+We use Vitest for testing. To run the test suite:
+
+```bash
+npm test
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to open an issue or submit a pull request.
+
+## 📄 License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
-
-## Quick Start
-
-```bash
-# 1. Install dependencies (first time only)
-npm install
-
-# 2. Start the development server (hot-reload via Vite)
-npm run dev
-# → open the printed URL, usually http://localhost:5173/
-```
-
-For a production build:
-```bash
-npm run build   # generates static files in dist/
-npm run preview # serves the built site
-```
-
-**Note for Production**: The `dist/` folder generated by `npm run build` contains the static files for your application. For production use, you should serve this folder with a static file hosting service like Nginx, Netlify, or GitHub Pages. The `npm run preview` command is for local previewing only and is not a production server.
-
-### Linting & Tests
-```bash
-npm run lint       # ESLint over the codebase
-npm run docs:lint  # Markdown lint for docs
-npm run test       # Placeholder until real tests are added
-```
-
----

@@ -10,3 +10,4 @@ rules:
     run: node scripts/lintGuard.js
     success_message: "✅ Lint clean."
     failure_message: "❌ Lint errors – fix before committing."
+ 

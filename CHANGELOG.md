@@ -3,6 +3,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Testing Suite**: Integrated Vitest and Testing Library to enable unit and component testing.
+- **Initial Tests**: Added a comprehensive test suite for the `ErrorMessage` component, covering rendering, functionality, and edge cases.
+- **Security Proxy**: Implemented a server-side proxy for Gemini API calls to protect the API key from client-side exposure.
+- **Content Sanitization**: Added DOMPurify to sanitize AI-generated content before rendering, preventing XSS vulnerabilities.
+- **Expandable Errors**: Error messages are now displayed in an expandable and copyable format for better user experience and debugging.
+
+### Changed
+- **API Key Verification**: Client-side API key verification for Gemini now only checks for emptiness, relying on the server for full validation.
+- **State Persistence**: AI analysis state is now persisted to `localStorage` to prevent data loss on page reloads. A debounce mechanism was added to prevent excessive writes.
+- **Filename Generation**: Exported filenames now include a timestamp for uniqueness.
+- **Test Script**: Updated the `test` script in `package.json` to run Vitest.
+- **Husky Security**: Improved the Husky setup by installing it as a dev dependency first.
+- **Commit Message Validation**: Refined the commit message regex to be more robust.
+- **Dependency Validation**: Added checks to ensure `npm audit` results are parsed safely.
+
+### Fixed
+- **Linter Errors**: Resolved various linter errors, including missing type definitions, incorrect ARIA attributes, and missing labels.
+- **`import.meta.env` Errors**: Added a Vite type declaration file to resolve TypeScript errors related to `import.meta.env`.
+
 ## [5.0.0] - 2024-07-31
 
 ### Added

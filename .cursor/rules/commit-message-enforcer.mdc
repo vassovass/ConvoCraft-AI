@@ -9,3 +9,4 @@ rules:
     run: node scripts/commitMessageEnforcer.js $COMMIT_MSG_FILE
     success_message: "✅ Commit message format valid."
     failure_message: "❌ Invalid commit message format. Use Conventional Commits."
+ 
