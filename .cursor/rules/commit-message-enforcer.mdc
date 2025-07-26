@@ -1,0 +1,11 @@
+version: 1
+
+rules:
+  - id: commit-message-enforcer
+    name: Commit Message Enforcer
+    description: |
+      Ensures all commit messages follow the Conventional Commits pattern "type(scope): subject".
+    trigger: preCommit
+    run: node scripts/commitMessageEnforcer.js $COMMIT_MSG_FILE
+    success_message: "✅ Commit message format valid."
+    failure_message: "❌ Invalid commit message format. Use Conventional Commits."
