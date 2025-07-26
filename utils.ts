@@ -169,6 +169,7 @@ export const getDefaultSettings = (): AppSettings => ({
   activeProvider: 'gemini',
   customTranscriptionPrompt: DEFAULT_PROMPT,
   providers: {
+    // Gemini key is handled entirely on the backend; never expose it in the bundled frontend.
     gemini: { name: 'gemini', apiKey: '', verificationStatus: 'unverified', error: '' },
     openai: { name: 'openai', apiKey: '', baseUrl: '', verificationStatus: 'unverified', error: '' },
     claude: { name: 'claude', apiKey: '', baseUrl: '', verificationStatus: 'unverified', error: '' },

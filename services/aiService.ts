@@ -1,5 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
-import { type AppSettings, type ProviderName, type ApiProviderConfig } from '../types';
+import { type ProviderName, type ApiProviderConfig } from '../types';
 import { getDefaultSettings } from '../utils';
 import { generateSilentAudioFile } from '../utils';
 
@@ -17,42 +16,19 @@ const handleApiError = (error: unknown, providerName?: ProviderName): Error => {
     return new Error("An unknown error occurred during AI processing.");
 };
 
-const fileToGenerativePart = async (file: File) => {
-  const base64EncodedDataPromise = new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (reader.result) {
-        resolve((reader.result as string).split(',')[1]);
-      } else {
-        reject(new Error("Failed to read file."));
-      }
-    };
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(file);
-  });
-  
-  return {
-    inlineData: {
-      data: await base64EncodedDataPromise,
-      mimeType: file.type,
-    },
-  };
-};
-
 export const verifyApiKey = async (provider: ApiProviderConfig): Promise<{ success: boolean; error?: string }> => {
     const { name, apiKey, baseUrl } = provider;
-    if (!apiKey) {
+
+    // For providers other than Gemini we still require a key on the client.
+    if (name !== 'gemini' && !apiKey) {
         return { success: false, error: 'API key is missing.' };
     }
 
     try {
         switch (name) {
             case 'gemini':
-                if (!apiKey) {
-                    return { success: false, error: 'API key cannot be empty.' };
-                }
-                // With the proxy, we can't fully verify the key on the client.
-                // We'll assume it's correct if present and let the server handle errors.
+                // Gemini requests are proxied through our backend; the key is never sent from the browser.
+                // Therefore we treat Gemini as always "verified" on the client side.
                 return { success: true };
             case 'openai':
                 const whisperTest = async () => {
@@ -108,7 +84,8 @@ export const transcribeFile = async (file: File): Promise<string> => {
     const { activeProvider, providers, customTranscriptionPrompt } = settings;
     const providerConfig = providers[activeProvider];
 
-    if (!providerConfig || !providerConfig.apiKey) {
+    // Only require an API key on the client for providers that actually need one from the browser.
+    if (activeProvider !== 'gemini' && (!providerConfig || !providerConfig.apiKey)) {
         throw new Error(`API key for active provider (${activeProvider}) is not configured. Please go to Settings.`);
     }
 

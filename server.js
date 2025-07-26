@@ -6,6 +6,10 @@ import multer from 'multer';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
+import readline from 'readline';
+import http from 'http';
+import net from 'net';
+import { readFileSync } from 'fs';
 
 dotenv.config();
 
@@ -43,12 +47,22 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+// Read version from package.json for compatibility check
+let APP_VERSION = '0.0.0';
+try {
+  const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url)));
+  APP_VERSION = pkg.version || APP_VERSION;
+} catch {}
+
+// Health endpoint returns version details
+app.get('/health', (_req, res) => res.json({ status: 'ok', version: APP_VERSION }));
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB limit
 });
 
-const PORT = process.env.PORT || 3001;
+let PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
@@ -116,6 +130,123 @@ app.post('/api/gemini/transcribe',
   }
 );
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+async function findNextAvailablePort(startPort, attempts = 20) {
+  let port = startPort + 1;
+  for (let i = 0; i < attempts; i++, port++) {
+    if (await isPortFree(port)) return port;
+  }
+  return null;
+}
+
+function isPortFree(port) {
+  return new Promise((resolve) => {
+    const tester = net.createServer()
+      .once('error', () => resolve(false))
+      .once('listening', () => {
+        tester
+          .once('close', () => resolve(true))
+          .close();
+      })
+      .listen(port, '0.0.0.0');
+  });
+}
+
+async function handlePortConflictInteractively({ port, sameVersion, suggestedPort }) {
+  if (!process.stdin.isTTY) return null;
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const promptMsg = `Use existing${sameVersion ? '' : ' (may be different version)'} (u) | suggested ${suggestedPort} (s) | custom (c) | exit (e)? [u/s/c/e]: `;
+
+  const answer = await new Promise((res) => rl.question(promptMsg, res));
+  rl.close();
+  const choice = answer.trim().toLowerCase();
+
+  if (choice === 'e') return { action: 'exit' };
+  if (choice === 'u' || choice === '') return { action: 'use-existing' };
+  if (choice === 's' && suggestedPort) return { action: 'new-port', port: suggestedPort };
+
+  // custom port path
+  const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const portStr = await new Promise((res) => rl2.question('Enter new port number: ', res));
+  rl2.close();
+  const newPort = Number(portStr.trim());
+  if (!newPort || isNaN(newPort)) return { action: 'invalid' };
+  return { action: 'new-port', port: newPort };
+}
+
+function startServer(port) {
+  return new Promise((resolve, reject) => {
+    const srv = app.listen(port, () => {
+      PORT = port;
+      console.log(`Server is running on port ${PORT}`);
+      resolve(srv);
+    });
+
+    srv.on('error', async (err) => {
+      if (err.code === 'EADDRINUSE') {
+        // Quick health probe to see if it's another ConvoCraft instance
+        let isConvocraft = false;
+        let remoteVersion = null;
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 1500);
+          const res = await fetch(`http://localhost:${port}/health`, { signal: controller.signal });
+          clearTimeout(timeout);
+          if (res.ok) {
+            const json = await res.json();
+            isConvocraft = json?.status === 'ok';
+            remoteVersion = json?.version;
+          }
+        } catch (_) { /* ignore */ }
+
+        const sameVersion = isConvocraft && remoteVersion === APP_VERSION;
+        console.warn(`Port ${port} is in use${isConvocraft ? ` (ConvoCraft AI ${remoteVersion || ''} detected)` : ''}.`);
+
+        // Find alternative port suggestion
+        const suggestedPort = await findNextAvailablePort(port);
+
+        const interactiveResult = await handlePortConflictInteractively({ port, sameVersion, suggestedPort });
+        if (interactiveResult) {
+          if (interactiveResult.action === 'exit') {
+            console.log('Exiting without starting a new server.');
+            process.exit(0);
+          }
+          if (interactiveResult.action === 'use-existing') {
+            console.log('Using existing instance.');
+            process.exit(0);
+          }
+          if (interactiveResult.action === 'invalid') {
+            console.error('Invalid port entered. Exiting.');
+            process.exit(1);
+          }
+          if (interactiveResult.action === 'new-port') {
+            await startServer(interactiveResult.port);
+            return resolve();
+          }
+        }
+
+        // No TTY or interactiveResult null
+        if (suggestedPort) {
+          console.log(`Starting on alternate port ${suggestedPort}.`);
+          try {
+            await startServer(suggestedPort);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        } else {
+          console.error('Port is in use and no alternate port found. Exiting.');
+          process.exit(1);
+        }
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
+// Kick off server start
+startServer(PORT).catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 }); 

@@ -14,7 +14,7 @@ vi.mock('../utils', async (importOriginal) => {
         getDefaultSettings: vi.fn().mockReturnValue({
             activeProvider: 'gemini',
             providers: {
-                gemini: { name: 'gemini', apiKey: 'test-key', verificationStatus: 'verified' },
+                gemini: { name: 'gemini', apiKey: '', verificationStatus: 'verified' },
                 openai: { name: 'openai', apiKey: '', verificationStatus: 'unverified' },
                 claude: { name: 'claude', apiKey: '', verificationStatus: 'unverified' },
                 groq: { name: 'groq', apiKey: '', verificationStatus: 'unverified' },
@@ -30,14 +30,8 @@ describe('verifyApiKey', () => {
         vi.clearAllMocks();
     });
 
-    it('returns error if API key is missing', async () => {
+    it('verifies gemini provider successfully even with no client key', async () => {
         const provider: ApiProviderConfig = { name: 'gemini', apiKey: '', verificationStatus: 'unverified' };
-        const result = await verifyApiKey(provider);
-        expect(result).toEqual({ success: false, error: 'API key is missing.' });
-    });
-
-    it('verifies gemini provider successfully', async () => {
-        const provider: ApiProviderConfig = { name: 'gemini', apiKey: 'test-key', verificationStatus: 'unverified' };
         const result = await verifyApiKey(provider);
         expect(result).toEqual({ success: true });
     });

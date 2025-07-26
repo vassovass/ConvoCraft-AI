@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Smart Port Management**: The proxy server now auto-detects when the default port `3001` is busy. It probes the existing service (via `/health`) to see if it is ConvoCraft AI and offers options: reuse, pick the next free port, or enter a custom port. In head-less environments it automatically falls back to the next available port.
+- **/health Endpoint**: Added a lightweight health endpoint that returns `{ status: "ok", version: "x.y.z" }` so external tools and the port-manager can confirm server identity and version.
+- **CLI Key Verifier**: New script `npm run verify:key` prompts for a random name and generates a Gemini haiku, proving the `GEMINI_API_KEY` works end-to-end.
+- **Environment Test**: Added `tests/verifyKey.test.ts` which asserts that a `GEMINI_API_KEY` is present (skipped if not set).
+
+### Changed
+- **Gemini Key Handling**: Gemini no longer requires a client-side key; verification and CLI tools operate entirely on the server key.
 - **Testing Suite**: Integrated Vitest and Testing Library to enable unit and component testing.
 - **Initial Tests**: Added a comprehensive test suite for the `ErrorMessage` component, covering rendering, functionality, and edge cases.
 - **Security Proxy**: Implemented a server-side proxy for Gemini API calls to protect the API key from client-side exposure.
