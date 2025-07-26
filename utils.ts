@@ -172,3 +172,17 @@ export const getDefaultSettings = (): AppSettings => ({
     custom: { name: 'custom', apiKey: '', baseUrl: '', verificationStatus: 'unverified', error: '' },
   },
 });
+
+function getSettings(): AppSettings {
+    const saved = localStorage.getItem('convocraft-settings');
+    if (saved) {
+        try {
+            // Merge saved settings with defaults to ensure all keys are present
+            const savedSettings = JSON.parse(saved);
+            return { ...getDefaultSettings(), ...savedSettings };
+        } catch (e) {
+            console.error("Failed to parse settings from localStorage, using defaults.", e);
+        }
+    }
+    return getDefaultSettings();
+}

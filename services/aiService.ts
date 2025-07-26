@@ -59,9 +59,8 @@ export const verifyApiKey = async (provider: ApiProviderConfig): Promise<{ succe
     try {
         switch (name) {
             case 'gemini':
-                const ai = new GoogleGenAI({ apiKey });
-                // A very small, inexpensive call to test the key
-                await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: 'test' });
+                // With the proxy, we can't verify the key on the client.
+                // We'll assume it's correct and let the server handle errors.
                 return { success: true };
             case 'openai':
                 const openaiUrl = baseUrl || 'https://api.openai.com/v1/models';
@@ -112,17 +111,23 @@ export const transcribeFile = async (file: File): Promise<string> => {
     try {
         switch (activeProvider) {
             case 'gemini':
-                const ai = new GoogleGenAI({ apiKey: providerConfig.apiKey });
-                const model = 'gemini-2.5-flash';
-                const prompt = customTranscriptionPrompt;
-                const filePart = await fileToGenerativePart(file);
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('prompt', customTranscriptionPrompt);
 
-                const response = await ai.models.generateContent({
-                    model: model,
-                    contents: { parts: [{ text: prompt }, filePart] },
+                const response = await fetch('http://localhost:3001/api/gemini/transcribe', {
+                    method: 'POST',
+                    body: formData,
                 });
 
-                const text = response.text;
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Proxy server returned status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const text = data.text;
+
                 if (text === null || text === undefined || text.trim() === '') {
                   throw new Error("Transcription resulted in an empty response from the AI provider.");
                 }
@@ -155,21 +160,22 @@ export const processChatWithAI = async (chatContent: string, userPrompt: string)
     try {
         switch (activeProvider) {
             case 'gemini':
-                const ai = new GoogleGenAI({ apiKey: providerConfig.apiKey });
-                const model = 'gemini-2.5-flash';
-
-                const systemInstruction = "You are an expert chat analyst. Your task is to process the following chat log based on the user's request. Be concise, accurate, and directly address the user's prompt.";
-                const fullPrompt = `${userPrompt}\n\nHere is the chat log:\n\n${chatContent}`;
-
-                const response = await ai.models.generateContent({
-                    model,
-                    contents: fullPrompt,
-                    config: {
-                        systemInstruction,
-                    }
+                const response = await fetch('http://localhost:3001/api/gemini', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: `${userPrompt}\n\nHere is the chat log:\n\n${chatContent}` }),
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Proxy server returned status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 
-                const text = response.text;
                 if (text === null || text === undefined || text.trim() === '') {
                   throw new Error("AI analysis resulted in an empty response.");
                 }
