@@ -1,0 +1,15 @@
+version: 1
+
+rules:
+  - id: docs-maintainer
+    name: Docs Maintainer Agent
+    description: |
+      Keeps README.md, CHANGELOG.md and planning.md up-to-date automatically.
+      • Uses commit history (Conventional Commits) to populate CHANGELOG.md according to *Keep a Changelog*.
+      • Adds newly detected features to the README *Features* section.
+      • Updates planning.md with scrum-style sprints → stories → tasks, asking the developer for clarifications when needed.
+      • Performs hardened writes (creates .bak backup files before overwriting).
+    trigger: onCommit|onMerge(main)
+    run: node scripts/docsMaintainer.js
+    success_message: "✅ Docs Maintainer completed updates."
+    failure_message: "❌ Docs Maintainer requires input – check terminal output."
