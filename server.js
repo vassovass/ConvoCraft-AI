@@ -7,7 +7,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import readline from 'readline';
-import http from 'http';
 import net from 'net';
 import { readFileSync } from 'fs';
 
@@ -166,11 +165,11 @@ async function handlePortConflictInteractively({ port, sameVersion, suggestedPor
   if (choice === 's' && suggestedPort) return { action: 'new-port', port: suggestedPort };
 
   // custom port path
-  const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout });
-  const portStr = await new Promise((res) => rl2.question('Enter new port number: ', res));
-  rl2.close();
+  const portStr = await new Promise((res) => rl.question('Enter new port number (1-65535): ', res));
   const newPort = Number(portStr.trim());
-  if (!newPort || isNaN(newPort)) return { action: 'invalid' };
+  if (!Number.isInteger(newPort) || newPort < 1 || newPort > 65535) {
+    return { action: 'invalid' };
+  }
   return { action: 'new-port', port: newPort };
 }
 
