@@ -1,8 +1,8 @@
 // scripts/lintGuard.js
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 try {
-  execSync('npm run lint --fix', { stdio: 'inherit' });
+  execSync('npm run lint --fix', { stdio: 'inherit', timeout: 60000 }); // 60-second timeout
   console.log('LintGuard: lint pass');
 } catch (err) {
   console.error('LintGuard: lint errors found');
