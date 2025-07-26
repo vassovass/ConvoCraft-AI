@@ -42,6 +42,8 @@ As the tool evolved, I moved the project to Cursor and hosted it on GitHub. My f
   - Leverage one-click prompts for summaries, key points, and sentiment analysis.
   - Write your own custom prompts to tailor the AI's analysis to your needs.
 - **Multi-Format Export**: Export your merged chats and AI analysis as `.txt`, `.html`, `.json`, or `.csv`.
+- **Smart Port Management**: The backend proxy detects if the default port is busy, tells you if another ConvoCraft AI instance is running (with version), and lets you reuse it or auto-select the next free port.
+- **CLI Key Verifier**: Run `npm run verify:key` to generate a haiku with Gemini, confirming your `GEMINI_API_KEY` works end-to-end.
 - **Private and Secure**: All processing happens in your browser. Your data is never sent to a third-party server, except for the AI provider you configure.
 - **Open Source**: Licensed under the MIT license, so you can use, modify, and share it freely.
 
@@ -127,5 +129,7 @@ While ConvoCraft AI supports multiple AI providers, it's important to understand
     - Create a `.env` file in the root of the project.
     - Add your Gemini API key: `GEMINI_API_KEY=your_gemini_api_key_here`
 4. **Run the server and client**:
-    - In one terminal, start the server: `node server.js`
+    - In one terminal, start the server: `node server.js`  
+      The server will automatically detect port conflicts and suggest an alternative if needed.
+    - (Optional) Verify your Gemini key works: `npm run verify-gemini-key`
     - In another terminal, start the client: `npm run dev`
