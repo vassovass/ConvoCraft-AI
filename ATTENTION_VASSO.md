@@ -19,6 +19,7 @@ Feel free to replace with whatever tools you actually use (Prettier, Vitest, etc
 Git itself does **not** set the `$COMMIT_MSG_FILE` env variable, so the Cursor rule won’t fire automatically.  Install **Husky** and create a `commit-msg` hook that calls the script and passes the commit-message file path:
 
 ```sh
+npm install --save-dev husky
 npx husky install                     # only once per repo
 npx husky add .husky/commit-msg 'node scripts/commitMessageEnforcer.js "$1"'
 ```

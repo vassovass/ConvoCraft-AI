@@ -1,9 +1,12 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { UploadIcon, SparklesIcon } from './Icons';
 import { exportAsTxt, exportAsHtml, exportAsJson, exportAsCsv } from '../utils';
-import { processChatWithAI } from '../services/aiService';
+import { transcribeFile, processChatWithAI } from '../services/aiService';
 import { Loader } from './Loader';
+import DOMPurify from 'dompurify';
+import { ErrorMessage } from './ErrorMessage';
 
 interface WhatsAppMergerProps {}
 
@@ -45,14 +48,22 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
       setAiEnabled(enabled ?? false);
       setCustomPrompt(prompt ?? '');
       setAiResult(result ?? '');
-    } catch {}
+    } catch (e) {
+      console.error(e)
+    }
   }, []);
 
   // persist on change
   useEffect(() => {
-    const data = JSON.stringify({ enabled: aiEnabled, prompt: customPrompt, result: aiResult });
-    localStorage.setItem(STORAGE_KEY, data);
-  }, [aiEnabled, customPrompt, aiResult]);
+    const handler = setTimeout(() => {
+        const data = JSON.stringify({ enabled: aiEnabled, prompt: customPrompt, result: aiResult });
+        localStorage.setItem(STORAGE_KEY, data);
+    }, 500); // 500ms debounce delay
+
+    return () => {
+        clearTimeout(handler);
+    };
+}, [aiEnabled, customPrompt, aiResult]);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [aiError, setAiError] = useState('');
 
@@ -143,7 +154,7 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
     const attempts = 2;
     for (let i = 0; i < attempts; i++) {
       try {
-        const result = await processChatWithAI(mergedChat, prompt);
+        const result = await processChatWithAI(mergedChat, prompt)
         setAiResult(result);
         break; // success
       } catch (err) {
@@ -158,6 +169,9 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
     }
     setIsAiProcessing(false);
   };
+
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+  const baseFilename = `whatsapp-chat-${ts}`;
 
   return (
     <div className="space-y-6">
@@ -181,7 +195,9 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
                     <UploadIcon className="w-5 h-5" />
                     Upload Chat File (.txt)
                 </button>
+                <label htmlFor="file-upload" className="sr-only">Upload Chat File</label>
                 <input
+                    id="file-upload"
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
@@ -234,13 +250,10 @@ PTT-20240101-WA0002: This is another test..."
                     <pre className="text-gray-300 whitespace-pre-wrap text-sm font-sans">{mergedChat}</pre>
                 </div>
                  <div className="mt-4 flex flex-wrap gap-3">
-                    {(() => {const ts = new Date().toISOString().replace(/[:.]/g,'-'); const base=`whatsapp-chat-${ts}`; return (
-                    <>
-                      <button onClick={() => exportAsTxt(mergedChat, base)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as TXT</button>
-                      <button onClick={() => exportAsHtml(mergedChat, base)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as HTML</button>
-                      <button onClick={() => exportAsJson(mergedChat, base)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as JSON</button>
-                      <button onClick={() => exportAsCsv(mergedChat, base)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as CSV</button>
-                    </>)})()}
+                    <button onClick={() => exportAsTxt(mergedChat, baseFilename)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as TXT</button>
+                    <button onClick={() => exportAsHtml(mergedChat, baseFilename)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as HTML</button>
+                    <button onClick={() => exportAsJson(mergedChat, baseFilename)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as JSON</button>
+                    <button onClick={() => exportAsCsv(mergedChat, baseFilename)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as CSV</button>
                 </div>
             </Section>
 
@@ -298,9 +311,9 @@ PTT-20240101-WA0002: This is another test..."
                                     <span>Thinking...</span>
                                  </div>
                                ) : aiError ? (
-                                <p className="text-red-400 whitespace-pre-wrap text-sm font-sans">{aiError}</p>
+                                <ErrorMessage error={aiError} />
                                ) : aiResult ? (
-                                <p className="text-gray-300 whitespace-pre-wrap text-sm font-sans">{aiResult}</p>
+                                <p className="text-gray-300 whitespace-pre-wrap text-sm font-sans" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(aiResult) }} />
                                ) : (
                                  <p className="text-gray-500">The AI-generated result will appear here.</p>
                                )}

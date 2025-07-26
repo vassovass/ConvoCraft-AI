@@ -19,13 +19,12 @@ try {
     process.exit(0);
   }
   const vulnerabilities = Object.values(data.vulnerabilities);
-  const critical = vulnerabilities.filter(v => v.severity === 'critical' || v.severity === 'high');
+  const critical = vulnerabilities.filter(v => v && v.severity && (v.severity === 'critical' || v.severity === 'high'));
   if (critical.length) {
     console.error(`DependencyInsight: detected ${critical.length} high/critical vulnerabilities.`);
     process.exit(1);
   }
-  console.log('DependencyInsight: no high/critical vulnerabilities');
 } catch (err) {
-  console.error('DependencyInsight: audit failed – details:', err.message || err);
+  console.error(`DependencyInsight: npm audit failed: ${err.message}`);
   process.exit(1);
-} 
+}

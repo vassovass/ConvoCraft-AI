@@ -10,4 +10,3 @@ rules:
     coverage_threshold: 80
     success_message: "✅ Coverage ≥ 80%. Push allowed."
     failure_message: "❌ Coverage below 80%. Add tests or adjust threshold."
----
