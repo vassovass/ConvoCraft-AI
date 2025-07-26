@@ -17,7 +17,7 @@
 - [⚙️ How the WhatsApp Merger Works: A Closer Look](#️-how-the-whatsapp-merger-works-a-closer-look)
 - [🤖 Choosing an AI for Transcription](#-choosing-an-ai-for-transcription)
 - [🚀 Getting Started](#-getting-started)
-- [✅ Running Tests](#-running-tests)
+- [✅ Running Tests](#-running-tests
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
