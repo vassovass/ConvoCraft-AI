@@ -28,4 +28,5 @@ export interface AppSettings {
     activeProvider: ProviderName;
     providers: Record<ProviderName, ApiProviderConfig>;
     customTranscriptionPrompt: string;
+    defaultDownloadFolder?: string;
 }

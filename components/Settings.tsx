@@ -95,7 +95,9 @@ const ProviderConfigSection: React.FC<ProviderConfigSectionProps> = ({ providerN
 export const Settings: React.FC = () => {
     const [settings, setSettings] = useState<AppSettings>(getDefaultSettings());
     const [saveStatus, setSaveStatus] = useState('');
+    const [downloadPath, setDownloadPath] = useState<string | null>(null);
 
+    // Load settings from localStorage on initial render
     useEffect(() => {
         try {
             const savedSettings = localStorage.getItem('appSettings');
@@ -112,12 +114,51 @@ export const Settings: React.FC = () => {
                     }
                 };
                 setSettings(mergedSettings);
+                if (mergedSettings.defaultDownloadFolder) {
+                    setDownloadPath(mergedSettings.defaultDownloadFolder);
+                }
             }
         } catch(e) {
             console.error("Could not load settings, using defaults.", e);
             setSettings(getDefaultSettings());
         }
     }, []);
+
+    // Debounced auto-save effect
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            try {
+                localStorage.setItem('appSettings', JSON.stringify(settings));
+                setSaveStatus('Changes saved automatically.');
+                // Clear the message after a few seconds
+                const statusTimeout = setTimeout(() => setSaveStatus(''), 3000);
+                return () => clearTimeout(statusTimeout);
+            } catch (e) {
+                setSaveStatus('Error saving settings.');
+                console.error(e);
+            }
+        }, 1000); // Auto-save 1 second after the last change
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [settings]);
+
+    const handleSelectDirectory = async () => {
+        if ('showDirectoryPicker' in window) {
+            try {
+                const handle = await (window as any).showDirectoryPicker();
+                const message = "Directory selected. Future saves will prompt to save here (path not stored).";
+                setDownloadPath(message);
+                setSettings(prev => ({ ...prev, defaultDownloadFolder: message }));
+
+            } catch (err) {
+                console.error("Error selecting directory:", err);
+            }
+        } else {
+            alert("Your browser does not support the File System Access API for directory selection.");
+        }
+    };
 
     const handleUpdate = useCallback((providerName: ProviderName, field: keyof ApiProviderConfig, value: string) => {
         setSettings(prev => ({
@@ -162,17 +203,6 @@ export const Settings: React.FC = () => {
             },
         }));
     }, [settings.providers]);
-
-    const handleSaveSettings = () => {
-        try {
-            localStorage.setItem('appSettings', JSON.stringify(settings));
-            setSaveStatus('Settings saved successfully!');
-            setTimeout(() => setSaveStatus(''), 3000);
-        } catch (e) {
-            setSaveStatus('Error saving settings.');
-            console.error(e);
-        }
-    };
 
     const handleActiveProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSettings(prev => ({...prev, activeProvider: e.target.value as ProviderName}));
@@ -242,10 +272,21 @@ export const Settings: React.FC = () => {
                 />
             </div>
             
+            <div className="pt-6 border-t border-gray-700">
+                <h3 className="text-xl font-semibold text-gray-100 mb-2">Download Options</h3>
+                 <p className="text-gray-400 mb-4 text-sm">
+                    Choose a default folder for saving your transcribed files. If not set, files will be saved to your browser's default downloads location.
+                </p>
+                <div className="flex items-center gap-4">
+                    <button onClick={handleSelectDirectory} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-500 transition-colors">
+                        Choose Save Directory
+                    </button>
+                    {downloadPath && <p className="text-sm text-gray-300 truncate">Current: {downloadPath}</p>}
+                </div>
+                 <p className="text-xs text-yellow-300/80 mt-2">Note: This feature uses modern browser APIs and may not be supported everywhere.</p>
+            </div>
+
             <div className="flex items-center gap-4 mt-4 pt-6 border-t border-gray-700">
-                <button onClick={handleSaveSettings} className="px-6 py-2 text-base font-semibold text-white bg-cyan-600 rounded-md hover:bg-cyan-500 transition-colors">
-                    Save All Settings
-                </button>
                  <button onClick={handleResetPrompt} className="px-4 py-2 text-sm font-semibold text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors">
                     Reset Prompt
                 </button>
