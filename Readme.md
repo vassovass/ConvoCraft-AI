@@ -38,7 +38,7 @@ As the tool evolved, I moved the project to Cursor and hosted it on GitHub. My f
   - **Save All Transcriptions**: Save all completed transcriptions to individual `.txt` files with a single click.
   - **Copy to Clipboard**: Easily copy individual transcriptions or the entire merged WhatsApp chat.
   - **Multiple Export Formats**: Export merged chats and AI analysis as `.txt`, `.html`, `.json`, or `.csv`.
-- **Customizable Save Location**: Choose a preferred default directory for your saved files, with a fallback to your browser's default downloads folder.
+  - **Customizable Save Location**: Choose a preferred default directory for your saved files, with a fallback to your browser's default downloads folder.
 - **WhatsApp Chat Integration**:
   - Upload or paste WhatsApp chat exports (`.txt`).
   - Automatically merge transcribed audio back into the chat timeline.
