@@ -31,6 +31,7 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
   const [transcriptionsText, setTranscriptionsText] = useState<string>('');
   const [mergedChat, setMergedChat] = useState<string>('');
   const [mergedCount, setMergedCount] = useState(0);
+  const [copyButtonText, setCopyButtonText] = useState('Copy');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State for AI processing
@@ -166,6 +167,18 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
     setMergedCount(count);
   };
 
+  const handleCopyToClipboard = () => {
+    if (!mergedChat) return;
+    navigator.clipboard.writeText(mergedChat).then(() => {
+        setCopyButtonText('Copied!');
+        setTimeout(() => setCopyButtonText('Copy'), 2000);
+    }).catch(err => {
+        console.error("Failed to copy text: ", err);
+        setCopyButtonText('Error!');
+        // Optionally, inform the user with a more visible error message
+    });
+  };
+
 
   const handleAiProcess = async (prompt: string) => {
     if (!mergedChat || !prompt) return;
@@ -270,6 +283,13 @@ PTT-20240101-WA0002: This is another test..."
                     <pre className="text-gray-300 whitespace-pre-wrap text-sm font-sans">{mergedChat}</pre>
                 </div>
                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button 
+                        onClick={handleCopyToClipboard} 
+                        disabled={!mergedChat} 
+                        className="px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-md hover:bg-cyan-500 disabled:opacity-50 transition-colors"
+                    >
+                        {copyButtonText}
+                    </button>
                     <button onClick={() => exportAsTxt(mergedChat, baseFilename)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as TXT</button>
                     <button onClick={() => exportAsHtml(mergedChat, baseFilename)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as HTML</button>
                     <button onClick={() => exportAsJson(mergedChat, baseFilename)} disabled={!mergedChat} className="px-4 py-2 text-sm font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50">Export as JSON</button>

@@ -13,6 +13,12 @@ import { Settings } from './components/Settings';
 
 type ActiveView = 'transcriber' | 'whatsapp' | 'settings';
 
+declare global {
+    interface Window {
+        showSaveFilePicker?: (options?: any) => Promise<any>;
+    }
+}
+
 const App: React.FC = () => {
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -77,7 +83,7 @@ const App: React.FC = () => {
     const totalMb = totalSize / 1024 / 1024;
     const fileCount = selectedFiles.length;
 
-    const messages = [];
+    const messages: string[] = [];
     if (fileCount > 10) {
       messages.push(`You are uploading ${fileCount} files.`);
     }
@@ -154,6 +160,43 @@ const App: React.FC = () => {
     });
   };
 
+    const handleSaveAll = async () => {
+        const completed = transcriptions.filter(t => t.status === 'completed' && t.transcribedText);
+        if (completed.length === 0) return;
+
+        const textToSave = completed
+            .map(t => `File: ${t.fileName}\nTranscription: ${t.transcribedText}`)
+            .join('\n\n---\n\n');
+
+        const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8' });
+        
+        try {
+            if (!window.showSaveFilePicker) {
+                throw new Error("File System Access API not supported.");
+            }
+            const handle = await window.showSaveFilePicker({
+                suggestedName: `ConvoCraft_Session_${new Date().toISOString().slice(0, 10)}.txt`,
+                types: [{
+                    description: 'Text Files',
+                    accept: { 'text/plain': ['.txt'] },
+                }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+        } catch (err) {
+            // Fallback for browsers that do not support the File System Access API or if the user cancels
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ConvoCraft_Session_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    };
+
   const NavButton: React.FC<{ view: ActiveView; label: string }> = ({ view, label }) => (
     <button
       onClick={() => setActiveView(view)}
@@ -221,13 +264,23 @@ const App: React.FC = () => {
                                       Select all completed ({completedTranscriptions.length})
                                   </label>
                               </div>
-                              <button
-                                  onClick={handleCopySelected}
-                                  className="px-4 py-1.5 text-sm font-semibold text-white bg-cyan-600 rounded-md hover:bg-cyan-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  disabled={selectedIds.length === 0}
-                              >
-                                  {copyButtonText} ({selectedIds.length})
-                              </button>
+                              <div className="flex items-center gap-2">
+                                  <button
+                                      onClick={handleCopySelected}
+                                      className="px-4 py-1.5 text-sm font-semibold text-white bg-cyan-600 rounded-md hover:bg-cyan-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      disabled={selectedIds.length === 0}
+                                  >
+                                      {copyButtonText} ({selectedIds.length})
+                                  </button>
+                                  <button
+                                      onClick={handleSaveAll}
+                                      className="px-4 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      disabled={completedTranscriptions.length === 0}
+                                      title="Save all completed transcriptions to a file"
+                                  >
+                                      Save All
+                                  </button>
+                              </div>
                           </div>
                           <div className="space-y-2 pt-2">
                               {transcriptions.map(item => (
