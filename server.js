@@ -13,6 +13,7 @@ import { readFileSync } from 'fs';
 dotenv.config();
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Rate limiting
 const apiLimiter = rateLimit({
@@ -25,22 +26,74 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // CORS configuration
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174', 
-    'http://localhost:5175',
-    // Regex for any localhost port above 1023
-    /^http:\/\/localhost:(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/, 
-    // Regex for local network IPs (192.168.x.x) on ports above 1023
-    /^http:\/\/192\.168\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/
-]; 
+
+// Helper to validate that a port is in the valid range for this application (1024-65535).
+const isValidPort = (port) => {
+  if (!port) return false;
+  const portNum = parseInt(port, 10);
+  return Number.isInteger(portNum) && portNum >= 1024 && portNum <= 65535;
+};
+
+// Helper to validate that an IP octet is a string representing a number from 0-255.
+// Disallows leading zeros (e.g., "01" is invalid).
+const isValidOctet = (octet) => {
+  if (typeof octet !== 'string') {
+    return false;
+  }
+  if (octet.length > 1 && octet.startsWith('0')) {
+    return false;
+  }
+  const num = parseInt(octet, 10);
+  return Number.isInteger(num) && num >= 0 && num <= 255;
+};
+
+// Helper to validate if an IP is a local network IP (192.168.x.x).
+const isLocalNetworkIp = (ip) => {
+  if (typeof ip !== 'string' || !ip.startsWith('192.168.')) {
+    return false;
+  }
+  const octets = ip.split('.');
+  if (octets.length !== 4) {
+    return false;
+  }
+  // Known octets are '192' and '168'. Validate the variable last two.
+  return isValidOctet(octets[2]) && isValidOctet(octets[3]);
+};
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.some(pattern => typeof pattern === 'string' ? pattern === origin : pattern.test(origin))) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Allow 'null' origins, which can occur with file:// URLs, redirects, or sandboxed iframes.
+    // Also allow no origin for server-to-server requests or direct API calls (e.g., curl).
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    try {
+      const { protocol, hostname, port } = new URL(origin);
+
+      // Enforce http protocol for local development security.
+      if (protocol !== 'http:') {
+        return callback(new Error('Not allowed by CORS: Requests must use http.'));
+      }
+
+      // Explicitly allow Vite's default development ports on localhost.
+      const allowedDevPorts = ['5173', '5174', '5175'];
+      if (hostname === 'localhost' && allowedDevPorts.includes(port)) {
+        return callback(null, true);
+      }
+
+      // Validate other local origins.
+      const isAllowedHostname = hostname === 'localhost' || isLocalNetworkIp(hostname);
+      const isAllowedPort = isValidPort(port);
+
+      if (isAllowedHostname && isAllowedPort) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    } catch (e) {
+      // Catch malformed URL errors from `new URL()`.
+      callback(new Error('Not allowed by CORS: Malformed origin URL.'));
     }
   },
 };
