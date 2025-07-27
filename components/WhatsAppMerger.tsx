@@ -175,7 +175,7 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
     }).catch(err => {
         console.error("Failed to copy text: ", err);
         setCopyButtonText('Error!');
-        // Optionally, inform the user with a more visible error message
+        alert("Could not copy text to clipboard. Please check your browser permissions.");
     });
   };
 

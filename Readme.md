@@ -34,16 +34,20 @@ As the tool evolved, I moved the project to Cursor and hosted it on GitHub. My f
 - **Multi-Provider AI**: Seamlessly switch between Google Gemini, OpenAI, Anthropic Claude, Groq, or even your own custom endpoint.
 - **Secure, Client-Side Storage**: Your API keys and settings are stored securely in your browser's local storage, never in code or on a server.
 - **Versatile Transcription**: Transcribe a wide range of formats, including audio (`.opus`, `.mp3`), video (`.mp4`), images, and documents.
+- **Flexible Data Export**:
+  - **Save All Transcriptions**: Save all completed transcriptions to individual `.txt` files with a single click.
+  - **Copy to Clipboard**: Easily copy individual transcriptions or the entire merged WhatsApp chat.
+  - **Multiple Export Formats**: Export merged chats and AI analysis as `.txt`, `.html`, `.json`, or `.csv`.
+- **Customizable Save Location**: Choose a preferred default directory for your saved files, with a fallback to your browser's default downloads folder.
 - **WhatsApp Chat Integration**:
   - Upload or paste WhatsApp chat exports (`.txt`).
-  - Filter chats by date range.
   - Automatically merge transcribed audio back into the chat timeline.
 - **Advanced AI Analysis**:
   - Leverage one-click prompts for summaries, key points, and sentiment analysis.
   - Write your own custom prompts to tailor the AI's analysis to your needs.
-- **Multi-Format Export**: Export your merged chats and AI analysis as `.txt`, `.html`, `.json`, or `.csv`.
-- **Smart Port Management**: The backend proxy detects if the default port is busy, tells you if another ConvoCraft AI instance is running (with version), and lets you reuse it or auto-select the next free port.
-- **CLI Key Verifier**: Run `npm run verify:key` to generate a haiku with Gemini, confirming your `GEMINI_API_KEY` works end-to-end.
+- **Auto-Saving Settings**: All changes made in the settings are saved automatically, providing a seamless user experience.
+- **Smart Port Management**: The backend proxy detects if the default port is busy and auto-selects the next free port.
+- **CLI Key Verifier**: Run `npm run verify:key` to confirm your `GEMINI_API_KEY` works end-to-end.
 - **Private and Secure**: All processing happens in your browser. Your data is never sent to a third-party server, except for the AI provider you configure.
 - **Open Source**: Licensed under the MIT license, so you can use, modify, and share it freely.
 
@@ -51,10 +55,10 @@ As the tool evolved, I moved the project to Cursor and hosted it on GitHub. My f
 
 Security is a top priority for ConvoCraft AI. Here's how we protect your data:
 
-- **Backend API Key**: Your `GEMINI_API_KEY` is loaded securely on the backend using a `.env` file. It is never exposed to the browser, significantly reducing the risk of it being compromised.
-- **Interactive Launcher**: The `start-convocraft-2.bat` script provides a secure command-line interface for managing the application, including secure input for API key verification.
+- **Client-Side API Keys**: API keys for providers like Gemini, OpenAI, etc., are stored exclusively in your browser's `localStorage`. They are never sent to the ConvoCraft backend server, ensuring they remain under your control. The backend only facilitates the connection, it does not handle your keys.
 - **Content Sanitization**: All AI-generated content is sanitized using DOMPurify before being rendered in the browser. This prevents Cross-Site Scripting (XSS) attacks and ensures that any potentially malicious content is neutralized.
 - **Dependency Scanning**: We use automated tools to scan for vulnerabilities in our dependencies, ensuring the project stays secure.
+- **Robust Launcher**: The `start-dev.bat` script provides a secure, interactive command-line interface that cleans up previous sessions, verifies system environment, and launches all services in the correct order.
 
 ## 💻 Technology Stack
 

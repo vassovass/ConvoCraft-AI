@@ -6,6 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2024-08-22
+
+This release focuses on enhancing user experience, improving data management, and streamlining the development workflow.
+
+### Added
+- **Save All Transcriptions**: Users can now save all completed transcriptions as individual `.txt` files with a single click from the main header.
+- **Copy Merged Chat**: A "Copy" button has been added to the WhatsApp Chat Merger to easily copy the entire merged conversation to the clipboard.
+- **Custom Download Directory**: A new setting allows users to select a preferred default folder for downloads using the File System Access API.
+- **Auto-Saving Settings**: All changes in the settings panel are now saved automatically with a debounce mechanism, removing the need for a manual save button.
+
+### Changed
+- **UI Enhancements**:
+  - The "Save All" button has been moved to the top-level application header for better visibility and access.
+  - The "Save All Settings" button has been removed from the Settings page in favor of the new auto-save functionality.
+- **Improved Error Handling**:
+  - The clipboard copy function in the WhatsApp Merger now provides a clear alert to the user if the operation fails.
+  - Added more robust error handling for file-saving operations.
+- **Streamlined Development Startup**: Removed multiple `pause` commands from the `start-dev.bat` script to accelerate the development server launch process.
+
+### Fixed
+- **File Locking on Windows**: Resolved a critical issue where the backend and frontend servers would attempt to write to the same log file, causing "file in use" errors on Windows. They now log to separate `backend.log` and `frontend.log` files.
+- **Color Codes in Logs**: Prevented color codes from being written to the log files, which was interfering with the script's ability to parse the frontend port.
+- **Race Conditions**: Enhanced the pre-flight cleanup in `start-dev.bat` to terminate all previous `ConvoCraft` processes before launch, preventing race conditions and file-locking issues.
+- **Settings Page Memory Leak**: Corrected a memory leak in the `Settings.tsx` component where a `setTimeout` for user feedback was not being properly cleared.
+- **Directory Picker Logic**: Improved the logic for the custom directory picker to correctly handle the `FileSystemDirectoryHandle` and provide clearer user feedback.
+
+### Code Refactoring
+- **Type Safety**: Replaced `any` types with specific `FileSystemFileHandle` and related interfaces for the `showSaveFilePicker` API in `App.tsx`, improving type safety.
+- **Reusability**: Extracted file-saving logic into a new `utils/fileSaver.ts` module with `saveTextToFile` and `generateSessionFilename` utility functions to reduce code duplication.
+
 ## [1.0.0] - 2024-08-21
 
 This release marks the first stable, production-ready version of ConvoCraft AI. It introduces a completely overhauled and robust development and launch environment, ensuring reliability and ease of use.
