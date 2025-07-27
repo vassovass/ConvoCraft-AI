@@ -29,8 +29,10 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174', 
     'http://localhost:5175',
-    /^http:\/\/localhost:\d{4,5}$/, // Regex for any localhost port
-    /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{4,5}$/ // Regex for local network IPs
+    // Regex for any localhost port above 1023
+    /^http:\/\/localhost:(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/, 
+    // Regex for local network IPs (192.168.x.x) on ports above 1023
+    /^http:\/\/192\.168\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):(102[4-9]|10[3-9][0-9]|1[1-9][0-9]{2}|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/
 ]; 
 
 const corsOptions = {
@@ -110,10 +112,9 @@ app.post('/api/gemini/transcribe',
 
       const { prompt } = req.body;
 
-      console.log('\n[Transcription request]');
-      console.log('File:', req.file.originalname,
-                  '| size:', req.file.size,
-                  '| mime:', req.file.mimetype);
+      console.log(`[${new Date().toISOString()}] Transcription Request Received:`);
+      console.log(`  - File: ${req.file.originalname} (${req.file.size} bytes)`);
+      console.log(`  - MIME Type: ${req.file.mimetype}`);
       console.log('Prompt length:', prompt.length, 'chars');
 
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -131,8 +132,10 @@ app.post('/api/gemini/transcribe',
 
       res.json({ text });
     } catch (error) {
-      const msg = (error && error.stack) ? error.stack : String(error);
-      console.error('[Gemini transcription error]\n', msg, '\n-----');
+      const timestamp = new Date().toISOString();
+      console.error(`[${timestamp}] Gemini Transcription Error:`, error.message);
+      console.error(`[${timestamp}] Full Error Stack:`, error.stack);
+      const msg = `[${timestamp}] ${error.message}`;
       res.status(500).json({ error: msg });
     }
   }
