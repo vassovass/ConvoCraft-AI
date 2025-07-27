@@ -51,7 +51,8 @@ As the tool evolved, I moved the project to Cursor and hosted it on GitHub. My f
 
 Security is a top priority for ConvoCraft AI. Here's how we protect your data:
 
-- **API Key Proxy**: To protect your Gemini API key, all requests are routed through a lightweight server-side proxy. This means your API key is never exposed to the browser, significantly reducing the risk of it being compromised.
+- **Backend API Key**: Your `GEMINI_API_KEY` is loaded securely on the backend using a `.env` file. It is never exposed to the browser, significantly reducing the risk of it being compromised.
+- **Interactive Launcher**: The `start-convocraft-2.bat` script provides a secure command-line interface for managing the application, including secure input for API key verification.
 - **Content Sanitization**: All AI-generated content is sanitized using DOMPurify before being rendered in the browser. This prevents Cross-Site Scripting (XSS) attacks and ensures that any potentially malicious content is neutralized.
 - **Dependency Scanning**: We use automated tools to scan for vulnerabilities in our dependencies, ensuring the project stays secure.
 
@@ -67,9 +68,10 @@ Security is a top priority for ConvoCraft AI. Here's how we protect your data:
   - **Code Review**: CodeRabbit
 - **Security & Quality Assurance**:
   - **Unit Testing**: Vitest, React Testing Library
-  - **API Security**: Server-side proxy, input validation, rate limiting
+  - **API Security**: Backend-only API key, input validation, rate limiting
   - **Frontend Security**: DOMPurify for XSS prevention
   - **Vulnerability Scanning**: Automated dependency audits
+  - **Launch Automation**: Windows Batch Scripting for robust, interactive server management
 
 ## ⚙️ How the WhatsApp Merger Works: A Closer Look
 
@@ -109,27 +111,50 @@ While ConvoCraft AI supports multiple AI providers, it's important to understand
 
 - Node.js (v18 or higher)
 - npm
+- Windows operating system (for the launcher script)
 
 ### Installation & Running the App
 
-1. **Clone the repository**:
+The recommended way to run ConvoCraft AI is by using the interactive launcher script.
 
+1.  **Clone the repository**:
     ```bash
     git clone https://github.com/your-username/convocraft-ai.git
     cd convocraft-ai
     ```
 
-2. **Install dependencies**:
-
+2.  **Install dependencies**:
     ```bash
     npm install
     ```
 
-3. **Set up your API key**:
-    - Create a `.env` file in the root of the project.
-    - Add your Gemini API key: `GEMINI_API_KEY=your_gemini_api_key_here`
-4. **Run the server and client**:
-    - In one terminal, start the server: `node server.js`  
-      The server will automatically detect port conflicts and suggest an alternative if needed.
-    - (Optional) Verify your Gemini key works: `npm run verify-gemini-key`
-    - In another terminal, start the client: `npm run dev`
+3.  **Set up your API key**:
+    - Create a file named `.env` in the root of the project.
+    - Add your Gemini API key to this file:
+      ```
+      GEMINI_API_KEY=your_gemini_api_key_here
+      ```
+    - The `.env` file is listed in `.gitignore`, so your key will never be committed to source control.
+
+4.  **Launch the application**:
+    - Simply double-click the `start-convocraft-2.bat` file in your file explorer.
+    - The script will guide you through the rest, including an optional API key verification test, checking for running servers, and launching the application in new, persistent command windows.
+
+### Manual Startup (Alternative)
+
+If you are not on Windows or prefer to run the services manually:
+
+-   **Run the server**:
+    ```bash
+    node server.js
+    ```
+-   **(Optional) Verify your Gemini key works**:
+    ```bash
+    npm run verify-gemini-key
+    ```
+-   **Run the client**:
+    ```bash
+    npm run dev
+    ```
+
+## ✅ Running Tests
