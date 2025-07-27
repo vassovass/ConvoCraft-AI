@@ -24,28 +24,40 @@ const promptUser = (question) =>
     process.exit(1);
   }
 
-  // Simple format validation – Gemini keys are long base64-like strings (letters, numbers, -, _)
-  const keyFormat = /^[A-Za-z0-9_\-]{20,}$/;
+  // A more specific regex to validate the typical format of a Gemini API key.
+  // It should start with "AIzaSy" and be followed by 33 alphanumeric characters (including - and _).
+  const keyFormat = /^AIzaSy[A-Za-z0-9_\-]{33}$/;
   if (!keyFormat.test(GEMINI_API_KEY)) {
-    console.error('[Error] GEMINI_API_KEY appears to be invalid. Double-check that you copied the entire key correctly.');
+    console.error('[Error] GEMINI_API_KEY appears to have an invalid format. It should be 39 characters long and start with "AIzaSy".');
+    console.error('[Info] Please double-check that you copied the entire key correctly from Google AI Studio.');
+    await promptUser('Press ENTER to exit...');
     process.exit(1);
   }
 
-  const namePrompt = '\nEnter ANY name (this will be woven into a test haiku to verify your Gemini key): ';
-  const name = (await promptUser(namePrompt)).trim() || 'friend';
-  rl.close();
+  console.log('[Info] GEMINI_API_KEY found. Performing a test API call to verify...');
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(`Write a three-line haiku celebrating ${name}.`);
+    const result = await model.generateContent("Explain why the sky is blue in one short sentence.");
     const response = await result.response;
-    console.log('\n--- Haiku ---');
-    console.log(response.text());
-    console.log('--------------');
+
+    if (response && response.text() && response.text().trim().length > 0) {
+        console.log('\n[Success] Gemini API key is working correctly!');
+        console.log('--------------------------------------------------');
+        console.log('Test Response: ', response.text().trim());
+        console.log('--------------------------------------------------');
+        await promptUser('Press ENTER to continue...');
+        process.exit(0); // Success
+    } else {
+        throw new Error('Received an empty or invalid response from the API.');
+    }
   } catch (err) {
-    console.error('[Error] Gemini API call failed. This may indicate an invalid API key or network issue.');
+    console.error('\n[Error] Gemini API call failed. This may indicate an invalid API key or network issue.');
     console.error('Details:', err.message || err);
-    process.exit(1);
+    await promptUser('Press ENTER to exit...');
+    process.exit(1); // Failure
+  } finally {
+    rl.close();
   }
-})(); 
+})();
