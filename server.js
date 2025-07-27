@@ -29,7 +29,8 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174', 
     'http://localhost:5175',
-    /^http:\/\/localhost:\d{4}$/ // Regex for any localhost port
+    /^http:\/\/localhost:\d{4,5}$/, // Regex for any localhost port
+    /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:\d{4,5}$/ // Regex for local network IPs
 ]; 
 
 const corsOptions = {
@@ -108,6 +109,13 @@ app.post('/api/gemini/transcribe',
       }
 
       const { prompt } = req.body;
+
+      console.log('\n[Transcription request]');
+      console.log('File:', req.file.originalname,
+                  '| size:', req.file.size,
+                  '| mime:', req.file.mimetype);
+      console.log('Prompt length:', prompt.length, 'chars');
+
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const filePart = {
@@ -123,8 +131,9 @@ app.post('/api/gemini/transcribe',
 
       res.json({ text });
     } catch (error) {
-      console.error('Error proxying transcription to Gemini:', error);
-      res.status(500).json({ error: 'Failed to proxy transcription request to Gemini.' });
+      const msg = (error && error.stack) ? error.stack : String(error);
+      console.error('[Gemini transcription error]\n', msg, '\n-----');
+      res.status(500).json({ error: msg });
     }
   }
 );

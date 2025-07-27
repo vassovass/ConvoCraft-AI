@@ -5,57 +5,54 @@ REM ===============================================
 
 cd /d %~dp0
 
-REM Warn if .env missing
-if not exist .env (
-  (
-    echo [WARN] No .env file found. Server will look for GEMINI_API_KEY in the environment.
-  )
-)
-
-REM Optional haiku verification ------------------------------------------------
+REM --- Optional haiku verification
 echo.
-echo Do you want to run the Gemini haiku verification test? (y/N)
-set /p RUN_HAIKU=
-if /I "%RUN_HAIKU%"=="Y" (
-  if "%GEMINI_API_KEY%"=="" (
-    echo Enter GEMINI_API_KEY (input will be hidden)...
-    for /f "usebackq delims=" %%K in (`powershell -NoProfile -Command "$p=Read-Host -AsSecureString; $b=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($p); [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($b)"`) do set "GEMINI_API_KEY=%%K"
-  )
-  echo Running verification...
-  npm run verify-gemini-key || (
-    echo [ERROR] Verification failed. Aborting launch.
-    set "GEMINI_API_KEY="
-    pause
-    goto :eof
-  )
-  set "GEMINI_API_KEY="
-  pause
+choice /c YN /n /m "Run Gemini haiku verification test? [Y/N] "
+if errorlevel 2 goto :SKIP_HAIKU
+if errorlevel 1 (
+    if "%GEMINI_API_KEY%"=="" (
+        echo.
+        echo Enter GEMINI_API_KEY (input is hidden):
+        for /f "usebackq delims=" %%K in (`powershell -NoProfile -Command "$sec=Read-Host -AsSecureString; $b=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec); [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($b)"`) do set "GEMINI_API_KEY=%%K"
+    )
+    echo. & echo --- Running verification ---
+    npm run verify-gemini-key || echo [WARN] Verification failed.
+    set "GEMINI_API_KEY=" & echo. & pause
+)
+:SKIP_HAIKU
+
+REM --- Backend (API) server handling
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "try { (iwr -UseBasicParsing http://localhost:3001/health -TimeoutSec 1).Content } catch { '' }"`) do set "_HEALTH_JSON=%%V"
+
+if not "%_HEALTH_JSON%"=="" (
+    for /f "tokens=3 delims=: " %%P in ('powershell -NoProfile -Command "(Get-NetTCPConnection -LocalPort 3001 -State Listen).OwningProcess"') do set "_EXIST_PID=%%P"
+    echo.
+    echo An existing ConvoCraft API server is running on port 3001 (PID: %_EXIST_PID%).
+    choice /c YN /n /m "Kill it and restart? [Y/N] "
+    if errorlevel 2 (
+        echo Using existing server. Launching frontend only.
+        goto :LAUNCH_FRONTEND
+    )
+    if not "%_EXIST_PID%"=="" (
+        echo Stopping existing server (PID %_EXIST_PID%)...
+        taskkill /PID %_EXIST_PID% /F >nul 2>&1
+        timeout /t 2 >nul
+    )
 )
 
-REM ---------------------------------------------------------------------------
+echo Starting new backend server on port 3001...
+start "ConvoCraft API" cmd /k "node server.js"
+timeout /t 2 >nul
 
-REM Basic prerequisite checks
-if not exist server.js (
-  echo [ERROR] server.js not found. Make sure you are in the project root.
-  goto :eof
-)
-where npm >nul 2>nul || (
-  echo [ERROR] npm command not found in PATH.
-  goto :eof
-)
+:LAUNCH_FRONTEND
+REM --- Frontend (Vite)
+REM -------------------------------------------------
+echo Starting frontend (Vite) and opening browser...
+start "ConvoCraft Vite" cmd /k "npm run dev -- --host --open"
 
-REM Launch backend server
-start "ConvoCraft API server" cmd /k "node server.js" || (
-  echo [ERROR] Failed to start backend.
-  goto :eof
-)
-
-REM Launch frontend
-start "ConvoCraft Vite" cmd /k "npm run dev -- --host" || (
-  echo [ERROR] Failed to start frontend.
-  goto :eof
-)
-
-echo Servers are starting in new windows.
-:EOF
-exit /b 
+:END
+echo.
+echo Launch sequence complete.
+echo.
+pause
+exit /b
