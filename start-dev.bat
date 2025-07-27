@@ -125,11 +125,9 @@ echo.
 :: Part 5: Open Application in Browser
 :: ----------------------------------------------------------------------------
 echo [5/5] Finding frontend port and opening application...
-pause
 
 set "frontend_port="
 echo [Info] Waiting for frontend to become available (this can take up to 20 seconds)...
-pause
 
 :: Wait for the frontend to start by reading the log file for the port.
 set "retries=20"
@@ -155,12 +153,9 @@ if defined frontend_port (
 
 :found_port
 echo [Info] Frontend is running on port !frontend_port!.
-pause
 echo [Info] Opening ConvoCraft AI in your default browser...
-pause
 start "" "http://localhost:!frontend_port!"
 echo.
-pause
 goto :finalization_step
 
 

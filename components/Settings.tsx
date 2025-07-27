@@ -5,6 +5,12 @@ import { verifyApiKey } from '../services/aiService';
 import { EyeIcon, EyeSlashIcon, CheckCircleIcon, ErrorIcon } from './Icons';
 import { Loader } from './Loader';
 
+declare global {
+    interface Window {
+        showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+    }
+}
+
 interface ProviderConfigSectionProps {
     providerName: ProviderName;
     config: ApiProviderConfig;
@@ -95,7 +101,9 @@ const ProviderConfigSection: React.FC<ProviderConfigSectionProps> = ({ providerN
 export const Settings: React.FC = () => {
     const [settings, setSettings] = useState<AppSettings>(getDefaultSettings());
     const [saveStatus, setSaveStatus] = useState('');
-    const [downloadPath, setDownloadPath] = useState<string | null>(null);
+    // TODO: Persist the directoryHandle using IndexedDB for cross-session access.
+    // FileSystemDirectoryHandle cannot be serialized to localStorage.
+    const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
 
     // Load settings from localStorage on initial render
     useEffect(() => {
@@ -114,9 +122,8 @@ export const Settings: React.FC = () => {
                     }
                 };
                 setSettings(mergedSettings);
-                if (mergedSettings.defaultDownloadFolder) {
-                    setDownloadPath(mergedSettings.defaultDownloadFolder);
-                }
+                // Note: Directory handle cannot be persisted in localStorage.
+                // This would require IndexedDB for a full implementation.
             }
         } catch(e) {
             console.error("Could not load settings, using defaults.", e);
@@ -126,13 +133,14 @@ export const Settings: React.FC = () => {
 
     // Debounced auto-save effect
     useEffect(() => {
+        let statusTimeout: NodeJS.Timeout;
         const handler = setTimeout(() => {
             try {
-                localStorage.setItem('appSettings', JSON.stringify(settings));
+                // We don't save the handle in settings, as it's not serializable for localStorage
+                const { defaultDownloadFolder, ...settingsToSave } = settings;
+                localStorage.setItem('appSettings', JSON.stringify(settingsToSave));
                 setSaveStatus('Changes saved automatically.');
-                // Clear the message after a few seconds
-                const statusTimeout = setTimeout(() => setSaveStatus(''), 3000);
-                return () => clearTimeout(statusTimeout);
+                statusTimeout = setTimeout(() => setSaveStatus(''), 3000);
             } catch (e) {
                 setSaveStatus('Error saving settings.');
                 console.error(e);
@@ -141,17 +149,17 @@ export const Settings: React.FC = () => {
 
         return () => {
             clearTimeout(handler);
+            clearTimeout(statusTimeout);
         };
     }, [settings]);
 
     const handleSelectDirectory = async () => {
-        if ('showDirectoryPicker' in window) {
+        if (window.showDirectoryPicker) {
             try {
-                const handle = await (window as any).showDirectoryPicker();
-                const message = "Directory selected. Future saves will prompt to save here (path not stored).";
-                setDownloadPath(message);
-                setSettings(prev => ({ ...prev, defaultDownloadFolder: message }));
-
+                const handle = await window.showDirectoryPicker();
+                setDirectoryHandle(handle);
+                // The handle is stored in component state, not persisted to localStorage
+                setSettings(prev => ({ ...prev, defaultDownloadFolder: handle.name }));
             } catch (err) {
                 console.error("Error selecting directory:", err);
             }
@@ -281,7 +289,7 @@ export const Settings: React.FC = () => {
                     <button onClick={handleSelectDirectory} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-500 transition-colors">
                         Choose Save Directory
                     </button>
-                    {downloadPath && <p className="text-sm text-gray-300 truncate">Current: {downloadPath}</p>}
+                    {settings.defaultDownloadFolder && <p className="text-sm text-gray-300 truncate">Selected: {settings.defaultDownloadFolder}</p>}
                 </div>
                  <p className="text-xs text-yellow-300/80 mt-2">Note: This feature uses modern browser APIs and may not be supported everywhere.</p>
             </div>
