@@ -111,11 +111,13 @@ While ConvoCraft AI supports multiple AI providers, it's important to understand
 
 - Node.js (v18 or higher)
 - npm
-- Windows operating system (for the launcher script)
+- Windows operating system (for the automated launcher script)
+
+> **Note on Platform Compatibility**: The `start-dev.bat` launcher script is designed for the Windows command-line environment. However, the core application itself is cross-platform. If you are on macOS or Linux, you can still run the project by following the [Manual Startup](#manual-startup-alternative) instructions.
 
 ### Installation & Running the App
 
-The recommended way to run ConvoCraft AI is by using the interactive launcher script.
+The recommended way to run ConvoCraft AI on Windows is by using the interactive launcher script.
 
 1.  **Clone the repository**:
     ```bash
@@ -137,8 +139,8 @@ The recommended way to run ConvoCraft AI is by using the interactive launcher sc
     - The `.env` file is listed in `.gitignore`, so your key will never be committed to source control.
 
 4.  **Launch the application**:
-    - Simply double-click the `start-convocraft-2.bat` file in your file explorer.
-    - The script will guide you through the rest, including an optional API key verification test, checking for running servers, and launching the application in new, persistent command windows.
+    - Simply run the `start-dev.bat` file from your terminal or double-click it in your file explorer.
+    - The script will guide you through the rest, including API key verification, checking for running servers, and launching the application in new, persistent command windows.
 
 ### Manual Startup (Alternative)
 

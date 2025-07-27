@@ -1,48 +1,44 @@
+# ConvoCraft AI - Changelog
 
-# Project Development Log
-
-This log documents the development journey of ConvoCraft AI, capturing the evolution of the project in a narrative, chronological format based on the sequence of development activities.
-
----
-
-### **Phase 4: The Intelligent Launcher & Architectural Solidification (August 2024)**
-
-**Objective: Achieve a rock-solid, secure, and user-friendly launch experience, resolving all prior architectural instabilities.**
-
-- **The Birth of the Intelligent Launcher:** The manual, two-terminal startup process was fully replaced by `start-convocraft-2.bat`, an interactive script designed to automate and simplify the entire launch sequence. This was a major step towards making the application professional and reliable.
-
-- **Solving the API Key Mystery:** After a significant debugging effort to resolve persistent "API key not valid" errors, the root cause was identified: the Node.js backend was not loading `.env` files by default. The `dotenv` package was integrated, providing a final, stable solution for securely managing the backend API key. This marked a critical turning point in stabilizing the application.
-
-- **The Story of a Script's Evolution:** The launcher script itself became a mini-project, evolving rapidly over a series of commits to address user feedback and improve robustness:
-  - **Initial Creation:** Built with the core logic for API key testing, checking for existing server processes, and launching the frontend and backend.
-  - **Security Hardening:** The API key prompt was made more secure using PowerShell to prevent the key from being displayed on-screen.
-  - **Reliability Enhancements:** The logic for killing an existing server was enhanced. Instead of a fixed delay, the script now actively polls the port until it is confirmed to be free, preventing race conditions. Health checks were also added to verify successful service startup.
-  - **A Frustrating Regression and a Key Fix:** A critical issue arose where the new command windows would close immediately upon launch. After a period of intense frustration and investigation, the problem was traced to how the Windows `start` command handled quotes. The fix, though simple, was a significant moment in stabilizing the developer experience and led to a new, persistent rule being established to prevent similar issues in the future.
-
-- **Final Architectural Pivot:** The project's architecture was decisively simplified to focus on a single, secure backend API key model. The more complex multi-provider, `localStorage`-based system from the previous phase was removed, resulting in a leaner, more secure, and more maintainable codebase that aligned with best practices.
+All notable changes to this project will be documented in this file.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-### **Phase 3: Architectural Exploration (Late July 2024)**
+## [1.0.0] - 2024-08-21
 
-**Objective: Explore the feasibility of a multi-provider, client-centric application.**
+This release marks the first stable, production-ready version of ConvoCraft AI. It introduces a completely overhauled and robust development and launch environment, ensuring reliability and ease of use.
 
-- **A New Direction:** The project experimented with a major new feature: allowing users to configure and switch between multiple AI providers (Gemini, OpenAI, etc.) directly in the UI.
-- **Client-Side Security Model:** To support this, a significant architectural shift was made. API key management was moved from the backend entirely into the browser's `localStorage`. While innovative, this client-centric approach was ultimately superseded in favor of a more robust backend proxy model in the next phase. This exploration, however, was a valuable exercise in understanding different security trade-offs.
+### Added
+- **Intelligent Development Launcher (`start-dev.bat`):** A new, interactive script that automates and orchestrates the entire development startup sequence.
+- **Sequential Service Loading:** The launcher now enforces a strict startup order (API Key Check -> Backend -> Frontend) to prevent race conditions and initialization errors.
+- **Automated Port Detection:** The launcher script now automatically finds the correct port used by the Vite frontend and opens the browser to the correct URL, resolving port conflicts.
+- **Live API Key Verification:** The startup process now includes a mandatory, user-friendly check to validate the `GEMINI_API_KEY` before launching the main application. The script waits for user confirmation before proceeding.
+- **Centralized Logging:** All output from the backend and frontend servers is now redirected to a unified log file (`logs/convocraft.log`) for simplified debugging.
+
+### Changed
+- **Backend API Key Management:** Integrated `dotenv` into the backend, establishing the `.env` file as the single source of truth for the `GEMINI_API_KEY`. This resolves previous inconsistencies.
+- **Simplified Architecture:** Removed the experimental, client-side, multi-provider API key system in favor of a more secure and maintainable backend-proxy model.
+
+### Fixed
+- **CLI Stability:** Resolved a critical issue where new command windows would close immediately on launch, ensuring they remain open for debugging as intended.
+- **Server Restart Logic:** Improved the logic for killing existing server processes by actively polling the port, ensuring it is free before restarting the server.
+
+### Migration Notes for Developers
+
+This version introduces a new, mandatory startup script: `start-dev.bat`. The previous manual method of running `npm run dev` and `node server.js` in separate terminals is now deprecated.
+
+**To start the development environment, you must now run `start-dev.bat` from your terminal.**
+
+This script handles all the necessary steps, including API key verification, backend and frontend server launch, and opening the application in your browser. This change was made to address significant architectural instabilities and provide a stable, professional, and reliable development experience.
 
 ---
 
-### **Phase 2: Initial Security Hardening (Late July 2024)**
+## [Unreleased] - Early Development
 
-**Objective: Move away from insecure, hardcoded client-side keys.**
+This section summarizes the initial exploratory phases of the project before the first stable release.
 
-- **First Major Refactor:** The original, insecure method of using a `config.js` file to store the API key on the client-side was removed. The application was refactored to use a server-side environment variable, representing the first major step towards a more secure design.
-
----
-
-### **Phase 1: Inception and Core Functionality (Mid-July 2024)**
-
-**Objective: Build a functional prototype for transcription and chat merging.**
-
-- **Initial Release:** The first version of the application was created, offering core features like file transcription and the innovative WhatsApp chat merger.
-- **Early Configuration:** The project initially used a simple `config.js` file for API key management, a common practice for quick prototyping but later identified as a security risk that needed to be addressed.
+- **Phase 3 (Late July 2024):** Explored a client-centric, multi-provider architecture where API keys were managed in `localStorage`. This approach was ultimately superseded in favor of a more secure backend model.
+- **Phase 2 (Late July 2024):** The first major security refactor. Moved away from an insecure, hardcoded `config.js` on the client-side to a server-side environment variable.
+- **Phase 1 (Mid-July 2024):** Initial project inception. The first version was created with core transcription and WhatsApp chat merging features, using a basic `config.js` for API key management.
