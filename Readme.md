@@ -17,7 +17,8 @@
 - [⚙️ How the WhatsApp Merger Works: A Closer Look](#️-how-the-whatsapp-merger-works-a-closer-look)
 - [🤖 Choosing an AI for Transcription](#-choosing-an-ai-for-transcription)
 - [🚀 Getting Started](#-getting-started)
-- [✅ Running Tests](#-running-tests
+- [✅ Running Tests](#-running-tests)
+- [📝 Roadmap](#-roadmap)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
@@ -108,6 +109,10 @@ While ConvoCraft AI supports multiple AI providers, it's important to understand
 - **Other Providers**: Other providers like Anthropic's Claude and Groq also have powerful models, but you should verify their transcription capabilities and pricing to see if they fit your needs.
 
 **Recommendation**: Start with the built-in Gemini integration. If you find you need higher accuracy for audio, we recommend setting up an OpenAI key and using it as your active provider. Ultimately, the choice is yours, and we encourage you to research which provider offers the best balance of performance and cost for your use case.
+
+## 📝 Roadmap
+
+We have a public roadmap that outlines our planned features and long-term goals. We welcome community feedback and contributions. You can view the roadmap [here](./ROADMAP.md).
 
 ## 🚀 Getting Started
 
