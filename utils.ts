@@ -8,7 +8,9 @@ export const getBaseName = (fileName: string): string => {
   return parts.slice(0, -1).join('.');
 };
 
-export const downloadFile = (blob: Blob, filename: string) => {
+const createBlob = (content: string, type: string): Blob => new Blob([content], { type });
+
+const triggerDownload = (blob: Blob, filename: string) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -20,8 +22,8 @@ export const downloadFile = (blob: Blob, filename: string) => {
 };
 
 export const exportAsTxt = (content: string, filename: string) => {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  downloadFile(blob, `${filename}.txt`);
+  const blob = createBlob(content, 'text/plain;charset=utf-8');
+  triggerDownload(blob, `${filename}.txt`);
 };
 
 export const exportAsHtml = (content: string, filename: string) => {
@@ -49,8 +51,8 @@ export const exportAsHtml = (content: string, filename: string) => {
     </body>
     </html>
   `;
-  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-  downloadFile(blob, `${filename}.html`);
+  const blob = createBlob(htmlContent, 'text/html;charset=utf-8');
+  triggerDownload(blob, `${filename}.html`);
 };
 
 const parseChatForJsonCsv = (chatContent: string): {timestamp: string, sender: string, message: string}[] => {
@@ -73,9 +75,10 @@ const parseChatForJsonCsv = (chatContent: string): {timestamp: string, sender: s
 
 export const exportAsJson = (content: string, filename: string) => {
   const messages = parseChatForJsonCsv(content);
+  if (messages.length === 0) return;
   const jsonString = JSON.stringify(messages, null, 2);
-  const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
-  downloadFile(blob, `${filename}.json`);
+  const blob = createBlob(jsonString, 'application/json;charset=utf-8');
+  triggerDownload(blob, `${filename}.json`);
 };
 
 export const exportAsCsv = (content: string, filename:string) => {
@@ -91,8 +94,8 @@ export const exportAsCsv = (content: string, filename:string) => {
   });
 
   const csvContent = [headers, ...csvRows].join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-  downloadFile(blob, `${filename}.csv`);
+  const blob = createBlob(csvContent, 'text/csv;charset=utf-8');
+  triggerDownload(blob, `${filename}.csv`);
 };
 
 

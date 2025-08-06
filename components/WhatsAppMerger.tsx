@@ -167,6 +167,13 @@ export const WhatsAppMerger: React.FC<WhatsAppMergerProps> = () => {
     setMergedCount(count);
   };
 
+  useEffect(() => {
+    if (mergedChat) {
+      // The state has been updated, now we can safely call export functions
+      // if needed, or just let the UI re-render.
+    }
+  }, [mergedChat]);
+
   const handleCopyToClipboard = () => {
     if (!mergedChat) return;
     navigator.clipboard.writeText(mergedChat).then(() => {

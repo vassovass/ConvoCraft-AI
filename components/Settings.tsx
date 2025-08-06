@@ -216,7 +216,8 @@ export const Settings: React.FC = () => {
         setSettings(prev => ({...prev, activeProvider: e.target.value as ProviderName}));
     }
 
-    const providerOrder: ProviderName[] = ['gemini', 'openai', 'claude', 'groq', 'custom'];
+    // TODO: Re-enable other providers here once they are fully tested and needed.
+    const providerOrder: ProviderName[] = ['gemini'];
 
     return (
         <div className="space-y-8 bg-gray-800/50 p-6 rounded-lg">
