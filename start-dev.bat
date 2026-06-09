@@ -86,15 +86,21 @@ del /f /q "!backend_log!" >nul 2>nul
 echo [Info] Launching backend server in a new window ('ConvoCraft API')...
 start "ConvoCraft API" cmd /k "node server.js >> "!backend_log!" 2>>&1"
 
-echo [Info] Waiting for backend to initialize (5 seconds)...
-timeout /t 5 /nobreak >nul
+echo [Info] Waiting for backend to become healthy (up to 20 seconds)...
 
 set "backend_ok="
-for /f %%a in ('curl -s -o NUL -w "%%{http_code}" http://localhost:3001/health') do (
-    if "%%a" == "200" (
-        set "backend_ok=true"
-    )
+set "_retries=20"
+:check_backend_health
+set "_code="
+for /f %%a in ('curl -s -o NUL -w "%%{http_code}" http://127.0.0.1:3001/health') do set "_code=%%a"
+if "%_code%"=="200" (
+    set "backend_ok=true"
+    goto :backend_health_done
 )
+timeout /t 1 /nobreak >nul
+set /a _retries-=1
+if %_retries% GTR 0 goto :check_backend_health
+:backend_health_done
 
 if not defined backend_ok (
     echo [Error] Backend failed to start or is not responding.

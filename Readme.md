@@ -24,7 +24,7 @@
 
 ## 📖 Project Genesis: From a Personal Problem to a Portfolio Piece
 
-This project was born out of a real-world frustration. I was using Perplexity on WhatsApp to capture notes and ideas, but it often failed to provide a text transcript of our conversations. I needed a reliable way to turn those voice notes into text, so I decided to build a solution myself.
+This project was born out of a real-world frustration. I was using Perplexity on WhatsApp to capture notes and ideas, but it often failed to provide a text transcript of our conversations. I needed a reliable way to turn those voice notes into text and then push those transcriptions into the exported chat. I then also wanted to instruct AI to summarize o, so I decided to build a solution myself.
 
 My journey began with the coding agent in Google AI Studio. I was pleasantly surprised by how quickly and accurately it scaffolded the initial application, creating a functional UI and the core transcription logic in a single shot. It effortlessly handled batch transcriptions of multiple files, even when the total size was well over 25MB. This experience challenged my previous assumption that older OpenAI models were superior for coding; Gemini proved to be incredibly fast and effective.
 

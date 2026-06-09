@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
 import readline from 'readline';
@@ -125,7 +125,7 @@ if (!GEMINI_API_KEY) {
     process.exit(1);
 }
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 app.post('/api/gemini',
   body('prompt').isString().notEmpty().trim(),
@@ -135,12 +135,13 @@ app.post('/api/gemini',
       return res.status(400).json({ errors: errors.array() });
     }
 
-    try {
+  try {
       const { prompt } = req.body;
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const result = await genAI.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+      const text = typeof result.text === 'function' ? result.text() : (result.text ?? '');
       res.json({ candidates: [{ content: { parts: [{ text }] } }] });
     } catch (error) {
       console.error('Error proxying to Gemini:', error);
@@ -170,8 +171,6 @@ app.post('/api/gemini/transcribe',
       console.log(`  - MIME Type: ${req.file.mimetype}`);
       console.log('Prompt length:', prompt.length, 'chars');
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
       const filePart = {
         inlineData: {
           data: req.file.buffer.toString('base64'),
@@ -179,9 +178,19 @@ app.post('/api/gemini/transcribe',
         },
       };
 
-      const result = await model.generateContent([prompt, filePart]);
-      const response = await result.response;
-      const text = response.text();
+      const result = await genAI.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: prompt },
+              filePart,
+            ],
+          },
+        ],
+      });
+      const text = typeof result.text === 'function' ? result.text() : (result.text ?? '');
 
       res.json({ text });
     } catch (error) {
