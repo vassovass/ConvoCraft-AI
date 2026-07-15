@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-07-15
+
+### Security
+- **Resolved all `npm audit` vulnerabilities (31 → 0)**, including the critical Vitest UI arbitrary-file-read advisory (GHSA-5xrq-8626-4rwp) and high-severity advisories in runtime dependencies (`multer`, `express-rate-limit`, `path-to-regexp`, `validator`, `ws`, `lodash`, `rollup`, `vite`).
+- **Dependency bumps**: `vitest` and `@vitest/ui` 3.2 → 4.1, `markdownlint-cli` 0.39 → 0.49, `@google/genai` 1.x → 2.x (same API surface, verified against the live endpoint).
+- **Removed unused dependencies**: `@google/generative-ai` (superseded by `@google/genai`) and `node-fetch` (Node's built-in fetch is used) were not imported anywhere.
+
 ## [1.2.0] - 2026-07-15
 
 ### Added
