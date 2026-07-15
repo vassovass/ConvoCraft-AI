@@ -12,7 +12,7 @@ export interface Transcription {
 
 // Types for the new multi-provider settings
 
-export type ProviderName = 'gemini' | 'openai' | 'claude' | 'groq' | 'custom';
+export type ProviderName = 'gemini' | 'elevenlabs' | 'openai' | 'claude' | 'groq' | 'custom';
 
 export type VerificationStatus = 'unverified' | 'verifying' | 'verified' | 'error';
 

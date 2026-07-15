@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-07-15
+
+### Added
+- **ElevenLabs (Scribe) Transcription Provider**: A second fully working transcription provider alongside Gemini. Set `ELEVENLABS_API_KEY` in `.env` (optionally `ELEVENLABS_STT_MODEL`, default `scribe_v1`) and select ElevenLabs in Settings. Audio and video files are transcribed via the new `/api/elevenlabs/transcribe` backend proxy route; the key never reaches the browser. Chat analysis continues to run on Gemini.
+- **Provider status in `/health`**: The health endpoint now reports which backend providers are configured (`providers.gemini`, `providers.elevenlabs`), and the Settings "Verify Key" button for ElevenLabs checks it live.
+
+### Changed
+- **Settings UI for backend-managed providers**: Gemini and ElevenLabs no longer show a meaningless API-key input; instead they show where the key lives (`.env`) and allow verification without entering a key.
+
+### Fixed
+- **Active provider selection is now respected**: `transcribeFile` previously always used default settings (hardcoding Gemini) instead of the provider saved in Settings. It now loads the saved settings from local storage.
+
 ## [1.1.0] - 2024-08-22
 
 This release focuses on enhancing user experience, improving data management, and streamlining the development workflow.

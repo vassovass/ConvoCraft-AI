@@ -109,8 +109,15 @@ try {
   APP_VERSION = pkg.version || APP_VERSION;
 } catch {}
 
-// Health endpoint returns version details
-app.get('/health', (_req, res) => res.json({ status: 'ok', version: APP_VERSION }));
+// Health endpoint returns version details and which providers are configured
+app.get('/health', (_req, res) => res.json({
+  status: 'ok',
+  version: APP_VERSION,
+  providers: {
+    gemini: Boolean(process.env.GEMINI_API_KEY),
+    elevenlabs: Boolean(process.env.ELEVENLABS_API_KEY),
+  },
+}));
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -119,10 +126,16 @@ const upload = multer({
 
 let PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+const ELEVENLABS_STT_MODEL = process.env.ELEVENLABS_STT_MODEL || 'scribe_v1';
 
 if (!GEMINI_API_KEY) {
     console.error("GEMINI_API_KEY is not defined. Please check your .env file.");
     process.exit(1);
+}
+
+if (!ELEVENLABS_API_KEY) {
+    console.warn("ELEVENLABS_API_KEY is not set; the ElevenLabs provider will be unavailable.");
 }
 
 const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -199,6 +212,57 @@ app.post('/api/gemini/transcribe',
       console.error(`[${timestamp}] Full Error Stack:`, error.stack);
       const msg = `[${timestamp}] ${error.message}`;
       res.status(500).json({ error: msg });
+    }
+  }
+);
+
+app.post('/api/elevenlabs/transcribe',
+  upload.single('file'),
+  async (req, res) => {
+    try {
+      if (!ELEVENLABS_API_KEY) {
+        return res.status(503).json({ error: 'ELEVENLABS_API_KEY is not configured on the server. Add it to your .env file.' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+      }
+
+      const mime = req.file.mimetype || '';
+      if (!mime.startsWith('audio/') && !mime.startsWith('video/')) {
+        return res.status(400).json({ error: `Unsupported file type "${mime}". ElevenLabs Scribe accepts audio and video files only.` });
+      }
+
+      console.log(`[${new Date().toISOString()}] ElevenLabs Transcription Request Received:`);
+      console.log(`  - File: ${req.file.originalname} (${req.file.size} bytes)`);
+      console.log(`  - MIME Type: ${mime}`);
+      console.log(`  - Model: ${ELEVENLABS_STT_MODEL}`);
+
+      const formData = new FormData();
+      formData.append('model_id', ELEVENLABS_STT_MODEL);
+      formData.append('file', new Blob([req.file.buffer], { type: mime }), req.file.originalname);
+      if (req.body.language_code) formData.append('language_code', req.body.language_code);
+      if (req.body.diarize === 'true') formData.append('diarize', 'true');
+
+      const elRes = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+        method: 'POST',
+        headers: { 'xi-api-key': ELEVENLABS_API_KEY },
+        body: formData,
+      });
+
+      if (!elRes.ok) {
+        const errBody = await elRes.text();
+        console.error(`[${new Date().toISOString()}] ElevenLabs API error ${elRes.status}: ${errBody}`);
+        const status = elRes.status === 401 ? 401 : 502;
+        return res.status(status).json({ error: `ElevenLabs API returned status ${elRes.status}.` });
+      }
+
+      const data = await elRes.json();
+      res.json({ text: data.text ?? '' });
+    } catch (error) {
+      const timestamp = new Date().toISOString();
+      console.error(`[${timestamp}] ElevenLabs Transcription Error:`, error.message);
+      console.error(`[${timestamp}] Full Error Stack:`, error.stack);
+      res.status(500).json({ error: `[${timestamp}] ${error.message}` });
     }
   }
 );

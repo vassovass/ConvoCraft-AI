@@ -1,6 +1,11 @@
 import { type ProviderName, type ApiProviderConfig } from '../types';
-import { getDefaultSettings } from '../utils';
+import { loadAppSettings } from '../utils';
 import { generateSilentAudioFile } from '../utils';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+// Providers whose keys live in the backend .env and are never sent from the browser.
+const BACKEND_MANAGED_PROVIDERS: ProviderName[] = ['gemini', 'elevenlabs'];
 
 const handleApiError = (error: unknown, providerName?: ProviderName): Error => {
     console.error(`Error calling ${providerName || 'AI'} API:`, error);
@@ -19,8 +24,8 @@ const handleApiError = (error: unknown, providerName?: ProviderName): Error => {
 export const verifyApiKey = async (provider: ApiProviderConfig): Promise<{ success: boolean; error?: string }> => {
     const { name, apiKey, baseUrl } = provider;
 
-    // For providers other than Gemini we still require a key on the client.
-    if (name !== 'gemini' && !apiKey) {
+    // For providers whose keys aren't backend-managed we still require a key on the client.
+    if (!BACKEND_MANAGED_PROVIDERS.includes(name as ProviderName) && !apiKey) {
         return { success: false, error: 'API key is missing.' };
     }
 
@@ -30,6 +35,15 @@ export const verifyApiKey = async (provider: ApiProviderConfig): Promise<{ succe
                 // Gemini requests are proxied through our backend; the key is never sent from the browser.
                 // Therefore we treat Gemini as always "verified" on the client side.
                 return { success: true };
+            case 'elevenlabs': {
+                // ElevenLabs requests are proxied through our backend too. The health
+                // endpoint reports whether the server has an ELEVENLABS_API_KEY configured.
+                const healthRes = await fetch(`${API_BASE}/health`);
+                if (!healthRes.ok) throw new Error(`Backend proxy not reachable (status ${healthRes.status}). Start it with start-dev.bat or "node server.js".`);
+                const health = await healthRes.json();
+                if (health.providers?.elevenlabs) return { success: true };
+                return { success: false, error: 'ELEVENLABS_API_KEY is not set in the backend .env file.' };
+            }
             case 'openai':
                 const whisperTest = async () => {
                     const silentAudio = await generateSilentAudioFile();
@@ -80,23 +94,23 @@ export const verifyApiKey = async (provider: ApiProviderConfig): Promise<{ succe
 
 
 export const transcribeFile = async (file: File): Promise<string> => {
-    const settings = getDefaultSettings(); // Use getDefaultSettings directly
+    const settings = loadAppSettings();
     const { activeProvider, providers, customTranscriptionPrompt } = settings;
     const providerConfig = providers[activeProvider];
 
     // Only require an API key on the client for providers that actually need one from the browser.
-    if (activeProvider !== 'gemini' && (!providerConfig || !providerConfig.apiKey)) {
+    if (!BACKEND_MANAGED_PROVIDERS.includes(activeProvider) && (!providerConfig || !providerConfig.apiKey)) {
         throw new Error(`API key for active provider (${activeProvider}) is not configured. Please go to Settings.`);
     }
 
     try {
         switch (activeProvider) {
-            case 'gemini':
+            case 'gemini': {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('prompt', customTranscriptionPrompt);
 
-                const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/gemini/transcribe`, {
+                const response = await fetch(`${API_BASE}/api/gemini/transcribe`, {
                     method: 'POST',
                     body: formData,
                 });
@@ -105,7 +119,7 @@ export const transcribeFile = async (file: File): Promise<string> => {
                     const errorData = await response.json();
                     throw new Error(errorData.error || `Proxy server returned status ${response.status}`);
                 }
-                
+
                 const data = await response.json();
                 const text = data.text;
 
@@ -113,7 +127,35 @@ export const transcribeFile = async (file: File): Promise<string> => {
                   throw new Error("Transcription resulted in an empty response from the AI provider.");
                 }
                 return text;
-            
+            }
+
+            case 'elevenlabs': {
+                // ElevenLabs Scribe is a dedicated speech-to-text model: audio and video only.
+                if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
+                    throw new Error('ElevenLabs Scribe transcribes audio and video only. Switch the active provider to Gemini for images and documents.');
+                }
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`${API_BASE}/api/elevenlabs/transcribe`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Proxy server returned status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const text = data.text;
+
+                if (text === null || text === undefined || text.trim() === '') {
+                  throw new Error("Transcription resulted in an empty response from the AI provider.");
+                }
+                return text;
+            }
+
             // Placeholder for other providers
             case 'openai':
             case 'claude':
@@ -127,8 +169,7 @@ export const transcribeFile = async (file: File): Promise<string> => {
 };
 
 export const processChatWithAI = async (chatContent: string, userPrompt: string): Promise<string> => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/gemini`, {
+    const response = await fetch(`${API_BASE}/api/gemini`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

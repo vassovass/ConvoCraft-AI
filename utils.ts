@@ -172,8 +172,9 @@ export const getDefaultSettings = (): AppSettings => ({
   activeProvider: 'gemini',
   customTranscriptionPrompt: DEFAULT_PROMPT,
   providers: {
-    // Gemini key is handled entirely on the backend; never expose it in the bundled frontend.
+    // Gemini and ElevenLabs keys are handled entirely on the backend; never expose them in the bundled frontend.
     gemini: { name: 'gemini', apiKey: '', verificationStatus: 'unverified', error: '' },
+    elevenlabs: { name: 'elevenlabs', apiKey: '', verificationStatus: 'unverified', error: '' },
     openai: { name: 'openai', apiKey: '', baseUrl: '', verificationStatus: 'unverified', error: '' },
     claude: { name: 'claude', apiKey: '', baseUrl: '', verificationStatus: 'unverified', error: '' },
     groq: { name: 'groq', apiKey: '', baseUrl: '', verificationStatus: 'unverified', error: '' },
@@ -181,13 +182,19 @@ export const getDefaultSettings = (): AppSettings => ({
   },
 });
 
-function loadSettings(): AppSettings {
-    const saved = localStorage.getItem('convocraft-settings');
+export function loadAppSettings(): AppSettings {
+    // 'appSettings' is the key the Settings page persists to.
+    const saved = localStorage.getItem('appSettings');
     if (saved) {
         try {
             // Merge saved settings with defaults to ensure all keys are present
             const savedSettings = JSON.parse(saved);
-            return { ...getDefaultSettings(), ...savedSettings };
+            const defaults = getDefaultSettings();
+            return {
+                ...defaults,
+                ...savedSettings,
+                providers: { ...defaults.providers, ...savedSettings.providers },
+            };
         } catch (e) {
             console.error("Failed to parse settings from localStorage, using defaults.", e);
         }

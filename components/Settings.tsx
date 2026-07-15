@@ -15,19 +15,24 @@ interface ProviderConfigSectionProps {
     providerName: ProviderName;
     config: ApiProviderConfig;
     isCustom: boolean;
+    isBackendManaged: boolean;
     onUpdate: (name: ProviderName, field: keyof ApiProviderConfig, value: string) => void;
     onVerify: (name: ProviderName) => void;
 }
 
 const providerNotes: Record<ProviderName, string> = {
     gemini: 'Great all-around model for text and multimodal tasks.',
+    elevenlabs: 'ElevenLabs Scribe: best-in-class speech-to-text for audio and video. Chat analysis still runs on Gemini.',
     openai: 'Recommended for high-accuracy audio transcription with Whisper.',
     claude: 'Strong model for nuanced text generation and analysis.',
     groq: 'High-speed inference for real-time applications.',
     custom: 'For use with any OpenAI-compatible API endpoint.'
 };
 
-const ProviderConfigSection: React.FC<ProviderConfigSectionProps> = ({ providerName, config, isCustom, onUpdate, onVerify }) => {
+// Providers whose keys live in the backend .env and are never entered in the browser.
+const BACKEND_MANAGED_PROVIDERS: ProviderName[] = ['gemini', 'elevenlabs'];
+
+const ProviderConfigSection: React.FC<ProviderConfigSectionProps> = ({ providerName, config, isCustom, isBackendManaged, onUpdate, onVerify }) => {
     const [showApiKey, setShowApiKey] = useState(false);
     const providerDisplayName = providerName.charAt(0).toUpperCase() + providerName.slice(1);
 
@@ -64,6 +69,11 @@ const ProviderConfigSection: React.FC<ProviderConfigSectionProps> = ({ providerN
                 </div>
             )}
 
+            {isBackendManaged ? (
+                <p className="text-xs text-gray-300 bg-gray-800/80 p-2 rounded-md border border-gray-600">
+                    The API key is read from the server's <code>.env</code> file ({providerName.toUpperCase()}_API_KEY) and never reaches the browser.
+                </p>
+            ) : (
             <div>
                 <label htmlFor={`${providerName}-apiKey`} className="block text-sm font-medium text-gray-300 mb-1">API Key</label>
                 <div className="relative">
@@ -80,11 +90,12 @@ const ProviderConfigSection: React.FC<ProviderConfigSectionProps> = ({ providerN
                     </button>
                 </div>
             </div>
+            )}
 
             <div className="flex items-center justify-between pt-2">
                 <button
                     onClick={() => onVerify(providerName)}
-                    disabled={config.verificationStatus === 'verifying' || !config.apiKey}
+                    disabled={config.verificationStatus === 'verifying' || (!isBackendManaged && !config.apiKey)}
                     className="px-3 py-1.5 text-sm font-semibold text-white bg-cyan-700 rounded-md hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Verify Key
@@ -217,7 +228,7 @@ export const Settings: React.FC = () => {
     }
 
     // TODO: Re-enable other providers here once they are fully tested and needed.
-    const providerOrder: ProviderName[] = ['gemini'];
+    const providerOrder: ProviderName[] = ['gemini', 'elevenlabs'];
 
     return (
         <div className="space-y-8 bg-gray-800/50 p-6 rounded-lg">
@@ -261,6 +272,7 @@ export const Settings: React.FC = () => {
                             providerName={name}
                             config={settings.providers[name]}
                             isCustom={name === 'custom'}
+                            isBackendManaged={BACKEND_MANAGED_PROVIDERS.includes(name)}
                             onUpdate={handleUpdate}
                             onVerify={handleVerify}
                         />

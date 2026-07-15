@@ -105,6 +105,7 @@ The real magic of ConvoCraft AI is in its ability to seamlessly weave your trans
 While ConvoCraft AI supports multiple AI providers, it's important to understand that not all models are created equal, especially when it comes to audio transcription. For the best results, you should use a model that is specialized for this task.
 
 - **Google Gemini**: The current implementation uses Gemini, which is a powerful multimodal model capable of handling audio, images, and video. It's a great general-purpose choice and is well-integrated into this application.
+- **ElevenLabs Scribe**: A dedicated speech-to-text model with excellent accuracy for voice notes in many languages. Fully integrated: add `ELEVENLABS_API_KEY` to your `.env` and select ElevenLabs as the active provider in Settings. Audio and video only — chat analysis still runs on Gemini.
 - **OpenAI's Whisper**: Whisper is a state-of-the-art model specifically designed for audio transcription. If your primary goal is the highest possible accuracy for audio files, you may want to configure the app to use OpenAI and its Whisper model.
 - **Other Providers**: Other providers like Anthropic's Claude and Groq also have powerful models, but you should verify their transcription capabilities and pricing to see if they fit your needs.
 
@@ -145,7 +146,11 @@ The recommended way to run ConvoCraft AI on Windows is by using the interactive 
       ```
       GEMINI_API_KEY=your_gemini_api_key_here
       ```
-    - The `.env` file is listed in `.gitignore`, so your key will never be committed to source control.
+    - (Optional) To enable the ElevenLabs Scribe speech-to-text provider, also add:
+      ```
+      ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+      ```
+    - The `.env` file is listed in `.gitignore`, so your keys will never be committed to source control.
 
 4.  **Launch the application**:
     - Simply run the `start-dev.bat` file from your terminal or double-click it in your file explorer.
