@@ -11,7 +11,7 @@ setlocal enabledelayedexpansion
 ::
 :: Launch Sequence:
 :: 1. Pre-flight Cleanup
-:: 2. Verify Gemini API Key
+:: 2. Verify API Keys (Gemini optional when ElevenLabs is set)
 :: 3. Start Backend Server
 :: 4. Start Frontend Dev Server
 :: 5. Open Browser
@@ -53,18 +53,32 @@ if exist "node_modules\\.vite" (
 )
 echo.
 
-:: Part 2: Verify Gemini API Key
+:: Part 2: Verify API Keys
 :: ----------------------------------------------------------------------------
-echo [2/5] Verifying Gemini API key...
+echo [2/5] Verifying API keys...
+set "elevenlabs_set="
+findstr /b /c:"ELEVENLABS_API_KEY=" .env >nul 2>nul && set "elevenlabs_set=true"
+if defined elevenlabs_set (
+    echo [Info] ELEVENLABS_API_KEY found. ElevenLabs Scribe transcription is available.
+) else (
+    echo [Warn] ELEVENLABS_API_KEY is not set in .env. ElevenLabs transcription is unavailable.
+)
+
 node scripts/verifyGeminiKey.js
 if errorlevel 1 (
     echo.
-    echo [Error] Gemini API key verification failed. The launcher will now exit.
-    pause
-    exit /b 1
+    if not defined elevenlabs_set (
+        echo [Error] The Gemini key failed and no ElevenLabs key is set, so no transcription provider works.
+        echo [Error] The launcher will now exit.
+        pause
+        exit /b 1
+    )
+    echo [Warn] The Gemini key failed. Gemini transcription and WhatsApp chat analysis will not work.
+    echo [Warn] Continuing with ElevenLabs. Pick ElevenLabs in Settings if it is not already selected.
 )
+echo.
 
-choice /c YN /m "API key is valid. Continue with launching ConvoCraft AI? [Y/N]"
+choice /c YN /m "Continue with launching ConvoCraft AI? [Y/N]"
 if errorlevel 2 (
     echo.
     echo [Info] User chose not to continue. Exiting launcher.

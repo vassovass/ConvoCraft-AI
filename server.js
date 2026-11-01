@@ -130,15 +130,20 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVENLABS_STT_MODEL = process.env.ELEVENLABS_STT_MODEL || 'scribe_v1';
 
 if (!GEMINI_API_KEY) {
-    console.error("GEMINI_API_KEY is not defined. Please check your .env file.");
-    process.exit(1);
+    console.warn("GEMINI_API_KEY is not set; the Gemini provider and chat analysis will be unavailable.");
 }
 
 if (!ELEVENLABS_API_KEY) {
     console.warn("ELEVENLABS_API_KEY is not set; the ElevenLabs provider will be unavailable.");
 }
 
-const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+if (!GEMINI_API_KEY && !ELEVENLABS_API_KEY) {
+    console.error("No transcription provider is configured. Add GEMINI_API_KEY or ELEVENLABS_API_KEY to your .env file.");
+    process.exit(1);
+}
+
+const genAI = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
+const GEMINI_NOT_CONFIGURED = 'GEMINI_API_KEY is not configured on the server. Add it to your .env file.';
 
 app.post('/api/gemini',
   body('prompt').isString().notEmpty().trim(),
@@ -146,6 +151,10 @@ app.post('/api/gemini',
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
+    }
+
+    if (!genAI) {
+      return res.status(503).json({ error: GEMINI_NOT_CONFIGURED });
     }
 
   try {
@@ -173,6 +182,10 @@ app.post('/api/gemini/transcribe',
     }
 
     try {
+      if (!genAI) {
+        return res.status(503).json({ error: GEMINI_NOT_CONFIGURED });
+      }
+
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
       }
