@@ -114,6 +114,24 @@ describe('transcribeFile', () => {
         expect(fetch).toHaveBeenCalledWith('http://localhost:3001/api/elevenlabs/transcribe', expect.objectContaining({ method: 'POST' }));
     });
 
+    it('explains an unreachable backend instead of blaming the provider', async () => {
+        (loadAppSettings as any).mockReturnValueOnce({ ...mockSettings, activeProvider: 'elevenlabs' });
+        (fetch as any).mockRejectedValue(new TypeError('Failed to fetch'));
+        const file = new File([''], 'note.ogg', { type: 'audio/ogg' });
+        await expect(transcribeFile(file)).rejects.toThrow(/Could not reach the ConvoCraft server/);
+    });
+
+    it('shows the server message when rate limited', async () => {
+        (loadAppSettings as any).mockReturnValueOnce({ ...mockSettings, activeProvider: 'elevenlabs' });
+        (fetch as any).mockResolvedValue({
+            ok: false,
+            status: 429,
+            json: () => Promise.resolve({ error: 'Too many requests to the ConvoCraft server. Wait a few minutes and try again.' })
+        });
+        const file = new File([''], 'note.ogg', { type: 'audio/ogg' });
+        await expect(transcribeFile(file)).rejects.toThrow(/Too many requests/);
+    });
+
     it('rejects non-audio/video files for elevenlabs', async () => {
         (loadAppSettings as any).mockReturnValueOnce({ ...mockSettings, activeProvider: 'elevenlabs' });
         const file = new File([''], 'photo.png', { type: 'image/png' });

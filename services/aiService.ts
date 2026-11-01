@@ -9,6 +9,10 @@ const BACKEND_MANAGED_PROVIDERS: ProviderName[] = ['gemini', 'elevenlabs'];
 
 const handleApiError = (error: unknown, providerName?: ProviderName): Error => {
     console.error(`Error calling ${providerName || 'AI'} API:`, error);
+    // fetch() rejects with a TypeError only when no response arrived at all.
+    if (error instanceof TypeError && /fetch/i.test(error.message)) {
+        return new Error(`Could not reach the ConvoCraft server at ${API_BASE}. Check that the backend window is still running, then retry.`);
+    }
     if (error instanceof Error) {
         if (error.message.toLowerCase().includes("api key") || error.message.includes('401') || error.message.includes('403')) {
             return new Error(`API key for ${providerName} is invalid or missing. Please check it in Settings.`);

@@ -15,15 +15,16 @@ dotenv.config();
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Rate limiting
+// Rate limiting. Applied after CORS (below) so a 429 still carries CORS headers and the
+// browser shows the message instead of a bare "Failed to fetch". The limit is sized for
+// batch-transcribing a whole WhatsApp export, which is one request per file.
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
+  message: { error: 'Too many requests to the ConvoCraft server. Wait a few minutes and try again.' },
 });
-
-app.use('/api/', apiLimiter);
 
 // CORS configuration
 
@@ -99,6 +100,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use('/api/', apiLimiter);
 
 app.use(express.json());
 
